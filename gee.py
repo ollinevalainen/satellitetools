@@ -3,7 +3,10 @@
 """
 Created on Thu Feb  6 15:24:12 2020
 
-Module to retrieve Sentinel-2 data from Google Earth Engine (GEE)
+Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
+Warning: the data is currently retrieved with 10m resolution (scale=10), so
+the 20m resolution bands are resampled.
+TODO: Add option for specifying the request spatial resolution.
 
 @author: Olli Nevalainen (olli.nevalainen@fmi.fi),
  Finnish Meteorological Institute)
@@ -264,6 +267,10 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
 def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=s2_filter1):
     """Get S2 data (level L2A, bottom of atmosphere data) from GEE.
+
+    Warning: the data is currently retrieved with 10m resolution (scale=10), so
+    the 20m resolution bands are resampled.
+    TODO: Add option for specifying the request spatial resolution.
 
     Parameters
     ----------
