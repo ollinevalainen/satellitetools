@@ -24,12 +24,12 @@ Convex hull input checking currently disabled. It's computationally slow and
 import os
 import numpy as np
 import xarray as xr
+
+# Read SNAP Biophysical processor neural network parameters
 # path_to_s2tbx_biophysical
 snap_bio_path = os.path.join(
     os.path.dirname(__file__), "snap-auxdata/biophysical/2_1/")
-
 nn_params = {}
-
 for var in ['FAPAR', 'FCOVER', 'LAI', 'LAI_Cab', 'LAI_Cw']:
     norm_minmax = np.loadtxt(snap_bio_path + "%s/%s_Normalisation"
                              % (var, var), delimiter=',')
@@ -174,14 +174,39 @@ def _s2_lists_to_pixel_vectors(single_date_dict):
         - single_date_dict['view_azimuth']))
     return pixel_vector
 
-def compute_ndvi(dataset):
 
+def compute_ndvi(dataset):
+    """Compute NDVI
+
+    Parameters
+    ----------
+    dataset : xarray dataset
+
+    Returns
+    -------
+    xarray dataset
+        Adds 'ndvi' xr array to xr dataset.
+
+    """
     b4 = dataset.band_data.sel(band='B4')
     b8 = dataset.band_data.sel(band='B8A')
     ndvi = (b8 - b4) / (b8 + b4)
     return dataset.assign({'ndvi': ndvi})
 
+
 def compute_ci_red_edge(dataset):
+    """Compute CI_Red_Edge vegetation index.
+
+    Parameters
+    ----------
+    dataset : xarray dataset
+
+    Returns
+    -------
+    xarray dataset
+        Adds 'ci_red_edge' xr array to xr dataset.
+
+    """
     b5 = dataset.band_data.sel(band='B5')
     b7 = dataset.band_data.sel(band='B7')
     ci_red_edge = (b7/b5) - 1
@@ -220,6 +245,24 @@ def compute_ci_red_edge(dataset):
 #     return dataset.assign({'lai': laiarr})
 
 def run_snap_biophys(dataset, variable):
+    """Compute specified variable using the SNAP algorithm.
+
+    See ATBD at https://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf
+
+    Parameters
+    ----------
+    dataset : xr dataset
+        xarray dataset.
+    variable : str
+        Options 'FAPAR', 'FCOVER', 'LAI', 'LAI_Cab' or 'LAI_Cw'
+
+    Returns
+    -------
+    xarray dataset
+        Adds the specified variable array to dataset (variable name in
+        lowercase).
+
+    """
     # generate view angle bands/layers
     vz = np.ones_like(dataset.band_data[:, 0, :, :]).T \
         * np.cos(np.radians(dataset.view_zenith)).values
@@ -251,6 +294,26 @@ def run_snap_biophys(dataset, variable):
     return dataset.assign({variable.lower(): arr})
 
 def estimate_gpp_vi_lue(vi, daily_par, model_name='ci_red_edge_1'):
+    """Estimate GPP using simple vegetation index based models and PAR.
+
+    This function has not been properly tested (i.e.used for a while)
+
+    Parameters
+    ----------
+    vi : float
+        Vegetation index values.
+    daily_par : float
+        Daily PAR as MJ/s/m².
+    model_name : str, optional
+        Name of the model (see biophys_xarray.GPP_LUE_models).
+        The default is 'ci_red_edge_1'.
+
+    Returns
+    -------
+    gpp : float
+        Estimated gross primary productivity.
+
+    """
     vi_name = "_".join(model_name.split('_')[:-1])
     gpp = GPP_LUE_models[vi_name][model_name]['model'](np.array(vi),
                                                        np.array(daily_par))
