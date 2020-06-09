@@ -8,13 +8,18 @@ Created on Tue Jun  2 16:30:39 2020
 
 Example of GEE usage
 """
-import gee
-import biophys_xarray as bio
+import satellitetools.gee as gee
+import satellitetools.biophys_xarray as bio
 import geopandas as gpd
+import os
 
 #%%
-geomfile = "/geometry-files/ruukki_blocks_wgs84.shp"
-netcdf_path = "/output/example_netcdf.nc"
+out_dir = "output/"
+if not os.path.exists(out_dir):
+    os.makedirs(out_dir, exist_ok=True)
+
+geomfile = "geometry-files/ruukki_blocks_wgs84.shp"
+
 datestart = "2019-01-01"
 dateend = "2019-12-31"
 qi_threshold = 0.02
@@ -47,7 +52,7 @@ for aoi in areas:
 timeseries = {}
 timeseries_variables = ['lai', 'fapar', 'ndvi']
 for aoi in areas:
-    aoi.data.to_netcdf(aoi.name + '_' + netcdf_path)
+    aoi.data.to_netcdf(os.path.join(out_dir, aoi.name + 'example_netcdf.nc'))
     # timeseries
     timeseries[aoi.name] = gee.xr_dataset_to_timeseries(
         aoi.data, timeseries_variables)
