@@ -13,8 +13,8 @@ import biophys_xarray as bio
 import geopandas as gpd
 
 #%%
-geomfile = "ruukki_blocks_wgs84.shp"
-netcdf_path = "example_netcdf.nc"
+geomfile = "/geometry-files/ruukki_blocks_wgs84.shp"
+netcdf_path = "/output/example_netcdf.nc"
 datestart = "2019-01-01"
 dateend = "2019-12-31"
 qi_threshold = 0.02
