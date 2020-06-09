@@ -1,5 +1,6 @@
-# s2_gee
-Get Sentinel-2 data from Google Earth Engine and compute biophysical parameters using SNAP Biophysical processor code(python implemetation)
+# satellitetools
+
+Currently has tools for getting Sentinel-2 data from Google Earth Engine and computing biophysical parameters using SNAP Biophysical processor code(python implemetation)
 
 See gee_example.py for simple example of usage.
 
