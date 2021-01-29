@@ -35,9 +35,9 @@ for block in df.itertuples(index=True, name="Block"):
     aoi = gee.AOI(block.Name, block.geometry)
     areas.append(aoi)
 
-print('Computing S2 quality information...')
+print("Computing S2 quality information...")
 gee.ee_get_s2_quality_info(areas, request)
-print('Retrieving S2 data...')
+print("Retrieving S2 data...")
 gee.ee_get_s2_data(areas, request, qi_threshold=qi_threshold)
 
 #%%
@@ -45,14 +45,13 @@ for aoi in areas:
     gee.s2_data_to_xarray(aoi, request)
     # compute NDVI, fapar and LAI
     aoi.data = bio.compute_ndvi(aoi.data)
-    aoi.data = bio.run_snap_biophys(aoi.data, 'LAI')
-    aoi.data = bio.run_snap_biophys(aoi.data, 'FAPAR')
+    aoi.data = bio.run_snap_biophys(aoi.data, "LAI")
+    aoi.data = bio.run_snap_biophys(aoi.data, "FAPAR")
 
 #%%
 timeseries = {}
-timeseries_variables = ['lai', 'fapar', 'ndvi']
+timeseries_variables = ["lai", "fapar", "ndvi"]
 for aoi in areas:
-    aoi.data.to_netcdf(os.path.join(out_dir, aoi.name + 'example_netcdf.nc'))
+    aoi.data.to_netcdf(os.path.join(out_dir, aoi.name + "example_netcdf.nc"))
     # timeseries
-    timeseries[aoi.name] = gee.xr_dataset_to_timeseries(
-        aoi.data, timeseries_variables)
+    timeseries[aoi.name] = gee.xr_dataset_to_timeseries(aoi.data, timeseries_variables)

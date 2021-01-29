@@ -251,9 +251,7 @@ def ee_get_s2_quality_info(AOIs, req_params):
             )
             return tmpfeature
 
-        s2_qi_image_collection = image_collection.map(
-            ee_get_s2_quality_info_image
-        )
+        s2_qi_image_collection = image_collection.map(ee_get_s2_quality_info_image)
 
         return (
             feature.set(
@@ -390,21 +388,13 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=s2_filter1):
             sun_zenith = img.get("MEAN_SOLAR_ZENITH_ANGLE")
             view_azimuth = (
                 ee.Array(
-                    [
-                        img.get("MEAN_INCIDENCE_AZIMUTH_ANGLE_%s" % b)
-                        for b in bands
-                    ]
+                    [img.get("MEAN_INCIDENCE_AZIMUTH_ANGLE_%s" % b) for b in bands]
                 )
                 .reduce(ee.Reducer.mean(), [0])
                 .get([0])
             )
             view_zenith = (
-                ee.Array(
-                    [
-                        img.get("MEAN_INCIDENCE_ZENITH_ANGLE_%s" % b)
-                        for b in bands
-                    ]
-                )
+                ee.Array([img.get("MEAN_INCIDENCE_ZENITH_ANGLE_%s" % b) for b in bands])
                 .reduce(ee.Reducer.mean(), [0])
                 .get([0])
             )
@@ -412,9 +402,9 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=s2_filter1):
             img = img.resample("bilinear").reproject(crs=crs, scale=10)
 
             # get the lat lon and add the ndvi
-            image_grid = ee.Image.pixelCoordinates(
-                ee.Projection(crs)
-            ).addBands([img.select(b) for b in bands + ["SCL"]])
+            image_grid = ee.Image.pixelCoordinates(ee.Projection(crs)).addBands(
+                [img.select(b) for b in bands + ["SCL"]]
+            )
 
             # apply reducer to list
             image_grid = image_grid.reduceRegion(
@@ -454,21 +444,15 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=s2_filter1):
         s2_data_feature = image_collection.map(ee_get_s2_data_image)
 
         return (
-            feature.set(
-                "productid", s2_data_feature.aggregate_array("productid")
-            )
-            .set(
-                "system_index", s2_data_feature.aggregate_array("system_index")
-            )
+            feature.set("productid", s2_data_feature.aggregate_array("productid"))
+            .set("system_index", s2_data_feature.aggregate_array("system_index"))
             .set("assetid", s2_data_feature.aggregate_array("assetid"))
             .set("tileid", s2_data_feature.aggregate_array("tileid"))
             .set("projection", s2_data_feature.aggregate_array("projection"))
             .set("sun_zenith", s2_data_feature.aggregate_array("sun_zenith"))
             .set("sun_azimuth", s2_data_feature.aggregate_array("sun_azimuth"))
             .set("view_zenith", s2_data_feature.aggregate_array("view_zenith"))
-            .set(
-                "view_azimuth", s2_data_feature.aggregate_array("view_azimuth")
-            )
+            .set("view_azimuth", s2_data_feature.aggregate_array("view_azimuth"))
             .set("x_coords", s2_data_feature.aggregate_array("x_coords"))
             .set("y_coords", s2_data_feature.aggregate_array("y_coords"))
             .set("SCL", s2_data_feature.aggregate_array("SCL"))
@@ -634,8 +618,7 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
     """
     # check that all bands have full data!
     datalengths = [
-        aoi.data[b].apply(lambda d: len(d))
-        == len(aoi.data.iloc[0]["x_coords"])
+        aoi.data[b].apply(lambda d: len(d)) == len(aoi.data.iloc[0]["x_coords"])
         for b in request_params.bands
     ]
     consistent_data = reduce(lambda a, b: a & b, datalengths)
@@ -803,8 +786,7 @@ def xr_dataset_to_timeseries(xr_dataset, variables):
 
         # compute how many of the nans are inside aoi (due to snap algorithm)
         out_of_aoi_pixels = (
-            len(xr_dataset[var].x) * len(xr_dataset[var].y)
-            - xr_dataset.aoi_pixels
+            len(xr_dataset[var].x) * len(xr_dataset[var].y) - xr_dataset.aoi_pixels
         )
         nans_inside_aoi = nans - out_of_aoi_pixels
         df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
