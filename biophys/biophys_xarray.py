@@ -26,6 +26,8 @@ import numpy as np
 import xarray as xr
 
 # Read SNAP Biophysical processor neural network parameters
+
+SNAP_BIO_BANDS = ["B3", "B4", "B5", "B6", "B7", "B8A", "B11", "B12"]
 # path_to_s2tbx_biophysical
 snap_bio_path = os.path.join(os.path.dirname(__file__), "snap-auxdata/biophysical/2_1/")
 nn_params = {}
@@ -276,9 +278,10 @@ def run_snap_biophys(dataset, variable):
         lowercase).
 
     """
+    band_data = dataset.band_data.sel(band=SNAP_BIO_BANDS)
     # generate view angle bands/layers
     vz = (
-        np.ones_like(dataset.band_data[:, 0, :, :]).T
+        np.ones_like(band_data[:, 0, :, :]).T
         * np.cos(np.radians(dataset.view_zenith)).values
     )
     vz = vz[..., np.newaxis]
@@ -289,7 +292,7 @@ def run_snap_biophys(dataset, variable):
     )
 
     sz = (
-        np.ones_like(dataset.band_data[:, 0, :, :]).T
+        np.ones_like(band_data[:, 0, :, :]).T
         * np.cos(np.radians(dataset.sun_zenith)).values
     )
     sz = sz[..., np.newaxis]
@@ -300,7 +303,7 @@ def run_snap_biophys(dataset, variable):
     )
 
     raz = (
-        np.ones_like(dataset.band_data[:, 0, :, :]).T
+        np.ones_like(band_data[:, 0, :, :]).T
         * np.cos(np.radians(dataset.sun_azimuth - dataset.view_azimuth)).values
     )
     raz = raz[..., np.newaxis]
@@ -310,7 +313,7 @@ def run_snap_biophys(dataset, variable):
         dims=["y", "x", "time", "band"],
     )
 
-    newarr = xr.concat([dataset.band_data, vzarr, szarr, razarr], dim="band")
+    newarr = xr.concat([band_data, vzarr, szarr, razarr], dim="band")
     newarr = newarr.stack(xy=("x", "y"))
     arr = xr.apply_ufunc(
         _compute_variable,

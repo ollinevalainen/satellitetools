@@ -9,14 +9,13 @@ Created on Tue Jun  2 16:30:39 2020
 Example of GEE usage
 """
 import satellitetools.gee as gee
-import satellitetools.biophys_xarray as bio
+import satellitetools.biophys as biophys
+from satellitetools.common.classes import AOI, RequestParams
+from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
 import geopandas as gpd
 import os
 
 #%%
-out_dir = "output/"
-if not os.path.exists(out_dir):
-    os.makedirs(out_dir, exist_ok=True)
 
 geomfile = "geometry-files/ruukki_blocks_wgs84.shp"
 
@@ -27,12 +26,12 @@ qi_threshold = 0.02
 # the example geometry file has eight different polygons
 df = gpd.read_file(geomfile)
 
-request = gee.S2RequestParams(datestart, dateend)
+request = RequestParams(datestart, dateend, S2_BANDS_10_20_GEE)
 
 
 areas = []
 for block in df.itertuples(index=True, name="Block"):
-    aoi = gee.AOI(block.Name, block.geometry)
+    aoi = AOI(block.Name, block.geometry, df.crs.to_string())
     areas.append(aoi)
 
 print("Computing S2 quality information...")
@@ -42,11 +41,10 @@ gee.ee_get_s2_data(areas, request, qi_threshold=qi_threshold)
 
 #%%
 for aoi in areas:
-    gee.s2_data_to_xarray(aoi, request)
     # compute NDVI, fapar and LAI
-    aoi.data = bio.compute_ndvi(aoi.data)
-    aoi.data = bio.run_snap_biophys(aoi.data, "LAI")
-    aoi.data = bio.run_snap_biophys(aoi.data, "FAPAR")
+    aoi.data = biophys.compute_ndvi(aoi.data)
+    aoi.data = biophys.run_snap_biophys(aoi.data, "LAI")
+    aoi.data = biophys.run_snap_biophys(aoi.data, "FAPAR")
 
 #%%
 timeseries = {}
