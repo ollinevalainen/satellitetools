@@ -676,7 +676,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
         "time": dataframe["Date"].values,
         "band": bands,
         "x": np.unique(dataframe.iloc[0]["x_coords"]),
-        "y": np.flip(np.unique(dataframe.iloc[0]["y_coords"])),
+        "y": np.unique(dataframe.iloc[0]["y_coords"]),
+        # Add flipping when previous datasets have been fixed np.flip(np.unique(dataframe.iloc[0]["y_coords"]))
     }
 
     dataset_dict = {
