@@ -170,7 +170,8 @@ def cog_get_s2_quality_info(aoi, req_params, items):
         qi_df = qi_df.append(qi_dict, ignore_index=True)
 
     qi_df = qi_df.sort_values("Date").reset_index(drop=True)
-    aoi.qi = qi_df
+    # aoi.qi = qi_df
+    return qi_df
 
 
 def cog_create_data_dict(aoi, item):
@@ -191,10 +192,16 @@ def cog_create_data_dict(aoi, item):
 
 
 def cog_get_s2_band_data(
-    aoi, req_params, items, qi_threshold=0.02, qi_filter=S2_FILTER1, align_to_band=None
+    aoi,
+    req_params,
+    items,
+    qi_dataframe,
+    qi_threshold=0.02,
+    qi_filter=S2_FILTER1,
+    align_to_band=None,
 ):
 
-    filtered_qi = filter_s2_qi_dataframe(aoi.qi, qi_threshold, qi_filter)
+    filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
     if len(filtered_qi) == 0:
         print("No data to be retrieved for area %s !" % aoi.name)
         return None
@@ -318,12 +325,13 @@ def cog_get_s2_band_data(
         data_dict.update(angles_dict)
         data_df = data_df.append(data_dict, ignore_index=True)
     data_df = data_df.sort_values("Date").reset_index(drop=True)
-    aoi.data = data_df
-    # Transform to xarray
-    cog_s2_data_to_xarray(aoi, req_params)
+    # aoi.data = data_df
+    # Transform to xarray dataset
+    data_ds = cog_s2_data_to_xarray(aoi, req_params, data_df)
+    return data_ds
 
 
-def cog_s2_data_to_xarray(aoi, req_params):
+def cog_s2_data_to_xarray(aoi, req_params, dataframe):
     """
 
     """
@@ -342,13 +350,13 @@ def cog_s2_data_to_xarray(aoi, req_params):
     ]
 
     # crs from projection
-    crs = aoi.data["projection"][0]
-    tileid = aoi.data["tileid"][0]
+    crs = dataframe["projection"][0]
+    tileid = dataframe["tileid"][0]
 
-    profile = aoi.data.loc[0]["profile"][0]
+    profile = dataframe.loc[0]["profile"][0]
     x_coords, y_coords = create_coordinate_arrays(profile)
 
-    array = aoi.data[bands].values
+    array = dataframe[bands].values
     # this will stack the array to ndarray with
     # dimension order = (time, band, x,y)
     narray = np.stack(
@@ -357,10 +365,10 @@ def cog_s2_data_to_xarray(aoi, req_params):
 
     aoi_pixels = np.size(narray[0, 0, :, :]) - np.sum(np.isnan(narray[0, 0, :, :]))
 
-    scl_array = np.stack(aoi.data["SCL"].values, axis=2).transpose()
+    scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose()
 
     coords = {
-        "time": aoi.data["Date"].values,
+        "time": dataframe["Date"].values,
         "band": [b.replace("B0", "B") for b in bands],
         "x": x_coords,
         "y": y_coords,
@@ -370,7 +378,7 @@ def cog_s2_data_to_xarray(aoi, req_params):
         "band_data": (["time", "band", "x", "y"], narray),
         "SCL": (["time", "x", "y"], scl_array),
     }
-    var_dict = {var: (["time"], aoi.data[var]) for var in list_vars}
+    var_dict = {var: (["time"], dataframe[var]) for var in list_vars}
     dataset_dict.update(var_dict)
 
     ds = xr.Dataset(
@@ -382,6 +390,7 @@ def cog_s2_data_to_xarray(aoi, req_params):
             "tile_id": tileid,
             "aoi_geometry": aoi.geometry.to_wkt(),
             "aoi_pixels": aoi_pixels,
+            "datasource": req_params.datasource,
         },
     )
-    aoi.data = ds
+    return ds

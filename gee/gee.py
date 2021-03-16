@@ -198,7 +198,9 @@ def ee_get_s2_quality_info(AOIs, req_params):
         AOIs = list([AOIs])
 
     features = [
-        ee.Feature(ee.Geometry.Polygon(a.coordinate_list), {"name": a.name})
+        ee.Feature(
+            ee.Geometry.Polygon(list(a.geometry.exterior.coords)), {"name": a.name}
+        )
         for a in AOIs
     ]
     feature_collection = ee.FeatureCollection(features)
@@ -275,13 +277,15 @@ def ee_get_s2_quality_info(AOIs, req_params):
     ).getInfo()
 
     s2_qi = s2_feature_collection_to_dataframes(s2_qi_feature_collection)
+    return s2_qi
+    # for a in AOIs:
+    #     name = a.name
+    #     a.qi = s2_qi[name]
 
-    for a in AOIs:
-        name = a.name
-        a.qi = s2_qi[name]
 
-
-def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=S2_FILTER1):
+def ee_get_s2_data(
+    AOIs, req_params, qi_dataframes, qi_threshold=0, qi_filter=S2_FILTER1
+):
     """Get S2 data (level L2A, bottom of atmosphere data) from GEE.
 
     Warning: the data is currently retrieved with 10m resolution (scale=10), so
@@ -330,7 +334,8 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=S2_FILTER1):
 
     features = []
     for a in AOIs:
-        filtered_qi = filter_s2_qi_dataframe(a.qi, qi_threshold, qi_filter)
+        qi_df = qi_dataframes[a.name]
+        filtered_qi = filter_s2_qi_dataframe(qi_df, qi_threshold, qi_filter)
         if len(filtered_qi) == 0:
             print("No observations to retrieve for area %s" % a.name)
             continue
@@ -350,7 +355,7 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=S2_FILTER1):
         image_list = [ee.Image(asset_id) for asset_id in full_assetids]
         crs = filtered_qi["projection"].values[0]["crs"]
         feature = ee.Feature(
-            ee.Geometry.Polygon(a.coordinate_list),
+            ee.Geometry.Polygon(list(a.geometry.exterior.coords)),
             {"name": a.name, "image_list": image_list},
         )
 
@@ -455,11 +460,12 @@ def ee_get_s2_data(AOIs, req_params, qi_threshold=0, qi_filter=S2_FILTER1):
     ).getInfo()
 
     s2_data = s2_feature_collection_to_dataframes(s2_data_feature_collection)
-
+    # Convert to xarray dataset
     for a in AOIs:
         name = a.name
-        a.data = s2_data[name]
-        s2_data_to_xarray(a, req_params)
+        s2_data[name] = s2_data_to_xarray(a, req_params, s2_data[name])
+        # s2_data_to_xarray(a, req_params)
+    return s2_data
 
 
 # Old, unused function, remove at some point.
@@ -586,7 +592,7 @@ def s2_feature_collection_to_dataframes(s2_feature_collection):
     return dataframes
 
 
-def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
+def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=True):
     """Convert AOI.data dataframe to xarray dataset.
 
     Parameters
@@ -610,11 +616,11 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
     """
     # check that all bands have full data!
     datalengths = [
-        aoi.data[b].apply(lambda d: len(d)) == len(aoi.data.iloc[0]["x_coords"])
+        dataframe[b].apply(lambda d: len(d)) == len(dataframe.iloc[0]["x_coords"])
         for b in request_params.bands
     ]
     consistent_data = reduce(lambda a, b: a & b, datalengths)
-    aoi.data = aoi.data[consistent_data]
+    dataframe = dataframe[consistent_data]
 
     #  2D data
     bands = request_params.bands
@@ -631,15 +637,15 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
     ]
 
     # crs from projection
-    crs = aoi.data["projection"].values[0]["crs"]
-    tileid = aoi.data["tileid"].values[0]
+    crs = dataframe["projection"].values[0]["crs"]
+    tileid = dataframe["tileid"].values[0]
     # original number of pixels requested (pixels inside AOI)
-    aoi_pixels = len(aoi.data.iloc[0]["x_coords"])
+    aoi_pixels = len(dataframe.iloc[0]["x_coords"])
 
     # transform 2D data to arrays
     for b in bands:
 
-        aoi.data[b] = aoi.data.apply(
+        dataframe[b] = dataframe.apply(
             lambda row: s2_lists_to_array(
                 row["x_coords"],
                 row["y_coords"],
@@ -649,14 +655,14 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
             axis=1,
         )
 
-    aoi.data["SCL"] = aoi.data.apply(
+    dataframe["SCL"] = dataframe.apply(
         lambda row: s2_lists_to_array(
             row["x_coords"], row["y_coords"], row["SCL"], convert_to_reflectance=False
         ),
         axis=1,
     )
 
-    array = aoi.data[bands].values
+    array = dataframe[bands].values
 
     # this will stack the array to ndarray with
     # dimension order = (time, band, x,y)
@@ -664,21 +670,20 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
         [np.stack(array[:, b], axis=2) for b in range(len(bands))], axis=2
     ).transpose()  # .swapaxes(2, 3)
 
-    scl_array = np.stack(aoi.data["SCL"].values, axis=2).transpose()
+    scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose()
 
-    # TODO! Reverse y_coords, they seem to be go the wrong way at the moment!!
     coords = {
-        "time": aoi.data["Date"].values,
+        "time": dataframe["Date"].values,
         "band": bands,
-        "x": np.unique(aoi.data.iloc[0]["x_coords"]),
-        "y": np.unique(aoi.data.iloc[0]["y_coords"]),
+        "x": np.unique(dataframe.iloc[0]["x_coords"]),
+        "y": np.flip(np.unique(dataframe.iloc[0]["y_coords"])),
     }
 
     dataset_dict = {
         "band_data": (["time", "band", "x", "y"], narray),
         "SCL": (["time", "x", "y"], scl_array),
     }
-    var_dict = {var: (["time"], aoi.data[var]) for var in list_vars}
+    var_dict = {var: (["time"], dataframe[var]) for var in list_vars}
     dataset_dict.update(var_dict)
 
     ds = xr.Dataset(
@@ -690,9 +695,11 @@ def s2_data_to_xarray(aoi, request_params, convert_to_reflectance=True):
             "tile_id": tileid,
             "aoi_geometry": aoi.geometry.to_wkt(),
             "aoi_pixels": aoi_pixels,
+            "datasource": request_params.datasource,
         },
     )
-    aoi.data = ds
+    # aoi.data = ds
+    return ds
 
 
 def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):

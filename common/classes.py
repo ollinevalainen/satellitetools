@@ -24,7 +24,7 @@ class RequestParams:
         'B6', 'B7', 'B8A', 'B11', 'B12'].
     """
 
-    def __init__(self, datestart, dateend, bands, target_gsd=None):
+    def __init__(self, datestart, dateend, datasource, bands=None, target_gsd=None):
         """.
 
         Parameters
@@ -46,10 +46,13 @@ class RequestParams:
 
         self.datestart = datestart
         self.dateend = dateend
+        self.datasource = datasource  # "gee" or  "aws_cog"
         self.bands = bands
         # self.bands = bands if bands else default_bands
-        # self.target_gsd = target_gsd if target_gsd else 20.0 # use this when target_gsd implemented to gee
-        self.target_gsd = target_gsd
+        self.target_gsd = (
+            target_gsd if target_gsd else 20.0
+        )  # use this when target_gsd implemented to gee
+        # self.target_gsd = target_gsd
 
 
 class AOI:
@@ -115,6 +118,4 @@ class AOI:
         self.name = name
         self.geometry = geometry
         self.geometry_crs = geometry_crs
-        self.qi = None
-        self.data = None
         self.tile = tile
