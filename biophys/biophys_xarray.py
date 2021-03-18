@@ -227,38 +227,6 @@ def compute_ci_red_edge(dataset):
     return dataset.assign({"ci_red_edge": ci_red_edge})
 
 
-# def compute_lai(dataset):
-#     # generate view angle bands/layers
-#     vz = np.ones_like(dataset.band_data[:, 0, :, :]).T \
-#         * np.cos(np.radians(dataset.view_zenith)).values
-#     vz = vz[..., np.newaxis]
-#     vzarr = xr.DataArray(
-#         vz, coords=[dataset.y, dataset.x, dataset.time, ['view_zenith']],
-#         dims=['y', 'x', 'time', 'band'])
-
-#     sz = np.ones_like(dataset.band_data[:, 0, :, :]).T * \
-#         np.cos(np.radians(dataset.sun_zenith)).values
-#     sz = sz[..., np.newaxis]
-#     szarr = xr.DataArray(
-#         sz, coords=[dataset.y, dataset.x, dataset.time, ['sun_zenith']],
-#         dims=['y', 'x', 'time', 'band'])
-
-#     raz = np.ones_like(dataset.band_data[:, 0, :, :]).T * \
-#         np.cos(np.radians(dataset.sun_azimuth - dataset.view_azimuth)).values
-#     raz = raz[..., np.newaxis]
-#     razarr = xr.DataArray(
-#         raz, coords=[dataset.y, dataset.x, dataset.time, ['relative_azimuth']],
-#         dims=['y', 'x', 'time', 'band'])
-
-#     newarr = xr.concat([dataset.band_data, vzarr, szarr, razarr], dim='band')
-#     newarr = newarr.stack(xy=('x', 'y'))
-#     laiarr = xr.apply_ufunc(
-#         _compute_variable, newarr, input_core_dims=[['band', 'xy']],
-#         output_core_dims=[['xy']], kwargs={'variable': 'LAI'},
-#         vectorize=True).unstack()
-#     return dataset.assign({'lai': laiarr})
-
-
 def run_snap_biophys(dataset, variable):
     """Compute specified variable using the SNAP algorithm.
 
