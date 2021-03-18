@@ -12,6 +12,7 @@ import satellitetools.gee as gee
 import satellitetools.biophys as biophys
 from satellitetools.common.classes import AOI, RequestParams
 from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
+from satellitetools.common.xrtools import xr_dataset_to_timeseries
 import geopandas as gpd
 import os
 
@@ -64,4 +65,4 @@ timeseries_variables = ["lai", "fapar", "ndvi"]
 for aoi in areas:
     aoi.data.to_netcdf(os.path.join(out_dir, aoi.name + "example_netcdf.nc"))
     # timeseries
-    timeseries[aoi.name] = gee.xr_dataset_to_timeseries(aoi.data, timeseries_variables)
+    timeseries[aoi.name] = xr_dataset_to_timeseries(aoi.data, timeseries_variables)

@@ -29,148 +29,7 @@ from satellitetools.common.sentinel2 import (
 
 ee.Initialize()
 
-
 NO_DATA = -99999
-# S2_REFL_TRANS = 10000
-# # ----------------- Sentinel-2 -------------------------------------
-# s2_qi_labels = [
-#     "NODATA",
-#     "SATURATED_DEFECTIVE",
-#     "DARK_FEATURE_SHADOW",
-#     "CLOUD_SHADOW",
-#     "VEGETATION",
-#     "NOT_VEGETATED",
-#     "WATER",
-#     "UNCLASSIFIED",
-#     "CLOUD_MEDIUM_PROBA",
-#     "CLOUD_HIGH_PROBA",
-#     "THIN_CIRRUS",
-#     "SNOW_ICE",
-# ]
-
-# s2_filter1 = [
-#     "NODATA",
-#     "SATURATED_DEFECTIVE",
-#     "CLOUD_SHADOW",
-#     "UNCLASSIFIED",
-#     "CLOUD_MEDIUM_PROBA",
-#     "CLOUD_HIGH_PROBA",
-#     "THIN_CIRRUS",
-#     "SNOW_ICE",
-# ]
-
-
-# class S2RequestParams:
-#     """S2 data request paramaters.
-
-#     Attributes
-#     ----------
-#     datestart : str
-#         Starting date for data request in form "2019-01-01".
-#     dateend : str
-#         Starting date for data request in form "2019-12-31".
-#     bands : list, optional
-#         List of strings with band name.
-#         the default is ['B3', 'B4', 'B5',
-#         'B6', 'B7', 'B8A', 'B11', 'B12'].
-#     """
-
-#     def __init__(self, datestart, dateend, bands=None):
-#         """.
-
-#         Parameters
-#         ----------
-#         datestart : str
-#             Starting date for data request in form "2019-01-01".
-#         dateend : str
-#             Starting date for data request in form "2019-12-31".
-#         bands : list, optional
-#             List of strings with band name.
-#             The default is ['B3', 'B4', 'B5',
-#             'B6', 'B7', 'B8A', 'B11', 'B12'].
-
-#         Returns
-#         -------
-#         None.
-
-#         """
-#         default_bands = ["B3", "B4", "B5", "B6", "B7", "B8A", "B11", "B12"]
-
-#         self.datestart = datestart
-#         self.dateend = dateend
-#         self.bands = bands if bands else default_bands
-
-
-# class AOI:
-#     """Area of interest for area info and data.
-
-#     Attributes
-#     ----------
-#     name : str
-#         Name of the area.
-#     geometry : str
-#         Geometry of the area of interest e.g. from geopandas.
-#         Currently only polygons tested. The default is None.
-#     coordinate_list : list, optional
-#         List of coordinates of a polygon
-#         (loop should be closed). Computed from geometry if not
-#         provided. The default is None.
-#     tile : str, optional
-#         Tile id as string for the data. Used to keep the data in
-#         same crs because an area can be in multiple tiles with
-#         different crs. The default is None.
-#     qi : pandas dataframe
-#         Dataframe with quality information about available imagery for the AOI.
-#         qi is empty at init and can be computed with
-#         ee_get_s2_quality_info function.
-#     data : pandas dataframe or xarray
-#         Dataframe holding data retrieved from GEE. Data can be computed using
-#         function
-#         qi is empty at init and can be computed with ee_get_s2_data and
-#         converted to xarray using s2_data_to_xarray function.
-
-#     Methods
-#     -------
-#     __init__
-#     """
-
-#     def __init__(self, name, geometry=None, coordinate_list=None, tile=None):
-#         """.
-
-#         Parameters
-#         ----------
-#         name : str
-#             Name of the area.
-#         geometry : geometry in wkt, optional
-#             Geometry of the area of interest e.g. from geopandas.
-#             Currently only polygons tested. The default is None.
-#         coordinate_list : list, optional
-#             List of coordinates of a polygon
-#             (loop should be closed). Computed from geometry if not
-#             provided. The default is None.
-#         tile : str, optional
-#             Tile id as string for the data. Used to keep the data in
-#             same crs because an area can be in multiple tiles with
-#             different crs. The default is None.
-
-#         Returns
-#         -------
-#         None.
-
-#         """
-#         if not geometry and not coordinate_list:
-#             sys.exit("AOI has to get either geometry or coordinates as list!")
-#         elif geometry and not coordinate_list:
-#             coordinate_list = list(geometry.exterior.coords)
-#         elif coordinate_list and not geometry:
-#             geometry = None
-
-#         self.name = name
-#         self.geometry = geometry
-#         self.coordinate_list = coordinate_list
-#         self.qi = None
-#         self.data = None
-#         self.tile = tile
 
 
 def ee_get_s2_quality_info(AOIs, req_params):
@@ -468,93 +327,6 @@ def ee_get_s2_data(
     return s2_data
 
 
-# Old, unused function, remove at some point.
-# def s2_data_dict_to_observation_dict(s2_data_dict):
-#     observation_dict = {}
-
-#     observation_dict = {'Date': []}
-#     observation_dict.update({
-#         prop: []
-#         for prop in s2_data_dict['features'][0]['properties'].keys()})
-
-#     for featnum in range(len(s2_data_dict['features'])):
-#         productid = (s2_data_dict['features']
-#                      [featnum]
-#                      ['properties']
-#                      ['productid'])
-#         date = datetime.datetime.strptime(productid.split('_')[2],
-#                                           '%Y%m%dT%H%M%S')
-#         observation_dict['Date'].append(date)
-#         for prop in s2_data_dict['features'][featnum]['properties'].keys():
-#             if prop != 'Date':
-#                 observation_dict[prop].append(s2_data_dict['features']
-#                                               [featnum]
-#                                               ['properties']
-#                                               [prop])
-#     return observation_dict
-
-# Old, unused function, remove at some point.
-# def observation_dict_to_dataframe(observation_dict, props):
-
-#     dataframe = pd.DataFrame({'Date': observation_dict['Date']})
-#     for prop in props:
-#         values = np.array(observation_dict[prop])
-#         nan_filter = np.isnan(values)
-#         quality_filter = (np.sum(nan_filter, axis=1)
-#                           / np.size(values, axis=1)) < 0.05
-
-#         # compute vales for all...
-#         dataframe[prop] = list(np.nanmean(values, axis=1))
-#         dataframe[prop+'_std'] = list(np.nanstd(values, axis=1))
-#         dataframe[prop+'_se'] = list(
-#             np.nanstd(values, axis=1) /
-#             np.sqrt(np.sum(~nan_filter, axis=1)))
-
-#         # then filter out bad ones...
-#         dataframe.loc[~quality_filter, prop] = np.nan
-#         dataframe.loc[~quality_filter, prop+'_std'] = np.nan
-#         dataframe.loc[~quality_filter, prop+'_se'] = np.nan
-
-#     return dataframe
-
-
-# def filter_s2_qi_dataframe(s2_qi_dataframe, qi_thresh, s2_filter=S2_FILTER1):
-#     """Filter qi dataframe.
-
-#     Parameters
-#     ----------
-#     s2_qi_dataframe : pandas dataframe
-#         S2 quality information dataframe (AOI instance qi attribute).
-#     qi_thresh : float
-#         Threshold value to filter images based on used qi filter.
-#         qi filter holds labels of classes whose percentages within the AOI
-#         is summed. If the sum is larger then the qi_threhold, data will not be
-#         retrieved for that date/image. The default is 1, meaning all data is
-#         retrieved.
-#     s2_filter : list
-#         List of strings with class labels (of unwanted classes) used to compute qi value,
-#         see qi_threhold. The default is s2_filter1 = ['NODATA',
-#               'SATURATED_DEFECTIVE',
-#               'CLOUD_SHADOW',
-#               'UNCLASSIFIED',
-#               'CLOUD_MEDIUM_PROBA',
-#               'CLOUD_HIGH_PROBA',
-#               'THIN_CIRRUS',
-#               'SNOW_ICE'].
-
-#     Returns
-#     -------
-#     filtered_s2_qi_df : pandas dataframe
-#         Filtered dataframe.
-
-#     """
-#     filtered_s2_qi_df = s2_qi_dataframe.loc[
-#         s2_qi_dataframe[s2_filter1].sum(axis=1) < qi_thresh
-#     ]
-
-#     return filtered_s2_qi_df
-
-
 def s2_feature_collection_to_dataframes(s2_feature_collection):
     """Convert feature collection dict from GEE to pandas dataframe.
 
@@ -675,9 +447,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
     coords = {
         "time": dataframe["Date"].values,
         "band": bands,
+        "y": np.flip(np.unique(dataframe.iloc[0]["y_coords"])),
         "x": np.unique(dataframe.iloc[0]["x_coords"]),
-        "y": np.unique(dataframe.iloc[0]["y_coords"]),
-        # Add flipping when previous datasets have been fixed np.flip(np.unique(dataframe.iloc[0]["y_coords"]))
     }
 
     dataset_dict = {
@@ -699,6 +470,7 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
             "datasource": request_params.datasource,
         },
     )
+    ds = ds.transpose("time", "band", "y", "x")
     # aoi.data = ds
     return ds
 
@@ -750,6 +522,8 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
     arr = np.flipud(arr)
     return arr
 
+
+# MOVED TO common.xrtools. Remove if no problems.
 
 # def xr_dataset_to_timeseries(xr_dataset, variables):
 #     """Compute timeseries dataframe from xr dataset.

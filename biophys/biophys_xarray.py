@@ -287,8 +287,8 @@ def run_snap_biophys(dataset, variable):
     vz = vz[..., np.newaxis]
     vzarr = xr.DataArray(
         vz,
-        coords=[dataset.y, dataset.x, dataset.time, ["view_zenith"]],
-        dims=["y", "x", "time", "band"],
+        coords=[dataset.x, dataset.y, dataset.time, ["view_zenith"]],
+        dims=["x", "y", "time", "band"],
     )
 
     sz = (
@@ -298,8 +298,8 @@ def run_snap_biophys(dataset, variable):
     sz = sz[..., np.newaxis]
     szarr = xr.DataArray(
         sz,
-        coords=[dataset.y, dataset.x, dataset.time, ["sun_zenith"]],
-        dims=["y", "x", "time", "band"],
+        coords=[dataset.x, dataset.y, dataset.time, ["sun_zenith"]],
+        dims=["x", "y", "time", "band"],
     )
 
     raz = (
@@ -309,17 +309,17 @@ def run_snap_biophys(dataset, variable):
     raz = raz[..., np.newaxis]
     razarr = xr.DataArray(
         raz,
-        coords=[dataset.y, dataset.x, dataset.time, ["relative_azimuth"]],
-        dims=["y", "x", "time", "band"],
+        coords=[dataset.x, dataset.y, dataset.time, ["relative_azimuth"]],
+        dims=["x", "y", "time", "band"],
     )
 
     newarr = xr.concat([band_data, vzarr, szarr, razarr], dim="band")
-    newarr = newarr.stack(xy=("x", "y"))
+    newarr = newarr.stack(yx=("y", "x"))
     arr = xr.apply_ufunc(
         _compute_variable,
         newarr,
-        input_core_dims=[["band", "xy"]],
-        output_core_dims=[["xy"]],
+        input_core_dims=[["band", "yx"]],
+        output_core_dims=[["yx"]],
         kwargs={"variable": variable},
         vectorize=True,
     ).unstack()

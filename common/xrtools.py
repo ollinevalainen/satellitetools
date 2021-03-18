@@ -40,13 +40,14 @@ def xr_dataset_to_timeseries(xr_dataset, variables):
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
 
-        # compute how many of the nans are inside aoi (due to snap algorithm)
-        out_of_aoi_pixels = (
-            len(xr_dataset[var].x) * len(xr_dataset[var].y) - xr_dataset.aoi_pixels
-        )
-        nans_inside_aoi = nans - out_of_aoi_pixels
-        df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
-
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
+
+        if hasattr(xr_dataset, "aoi_pixels"):
+            # compute how many of the nans are inside aoi (due to snap algorithm)
+            out_of_aoi_pixels = (
+                len(xr_dataset[var].x) * len(xr_dataset[var].y) - xr_dataset.aoi_pixels
+            )
+            nans_inside_aoi = nans - out_of_aoi_pixels
+            df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
 
     return df

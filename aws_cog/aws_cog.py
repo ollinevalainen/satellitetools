@@ -369,9 +369,11 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
 
     coords = {
         "time": dataframe["Date"].values,
-        "band": [b.replace("B0", "B") for b in bands],
-        "x": x_coords,
+        "band": [
+            b.replace("B0", "B") for b in bands
+        ],  # switch to be consistent with gee
         "y": y_coords,
+        "x": x_coords,
     }
 
     dataset_dict = {
@@ -393,4 +395,5 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
             "datasource": req_params.datasource,
         },
     )
+    ds = ds.transpose("time", "band", "y", "x")
     return ds
