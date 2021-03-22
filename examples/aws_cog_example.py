@@ -49,7 +49,7 @@ request = RequestParams(
     "2020-06-10",
     datasource=datasource,
     bands=S2_BANDS_10_20_COG,
-    target_gd=10.0,
+    target_gsd=10.0,
 )
 aoi.qi, aoi.data = get_s2_qi_and_data(aoi, request, qi_threshold=qi_threshold)
 
