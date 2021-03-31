@@ -28,9 +28,11 @@ Old codes include old version of gee. Stored because it had some Landsat-8 proce
 * xlmtodict (aws_cog only)
 
 
-**Some explanation of the satellite data filtering process used**
+**Some explanation of the satellite data filtering process used:**
+
 The satellite data is filtered based on the information available in the scene classification band (SCL) of the Sentinel-2 Level 2A products. 
 In the SCL band every pixel is classified into one of the following classes: 
+
 [
     "NODATA",
     "SATURATED_DEFECTIVE",
@@ -58,6 +60,7 @@ S2_FILTER1 = [
     "THIN_CIRRUS",
     "SNOW_ICE",
 ]
+
 These classes are considered unwanted and user can change the classes included in that list by the qi_filter parameter. If the sum of the percentages of the classes defined in the qi_filter is less than the qi_threshold, the data is considered good/acceptable. I have been using the 0.02 which I have empirically tested and found to be ok for our purposes.
 
 The SCL band provided in the S2 level-2A products is automatically generated and it has errors/misclassifications in it. This affects also the accuracy of the filtering processs and some bad data acquisition dates usually passes the filter.
