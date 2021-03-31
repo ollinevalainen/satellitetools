@@ -1,5 +1,9 @@
 # satellitetools
 
+**See branch develop for more thorough readme and up-to-date code!!**
+
+Old short readme below. Develop will become master at some point in near future.
+
 Currently has tools for getting Sentinel-2 data from Google Earth Engine and computing biophysical parameters using SNAP Biophysical processor code(python implemetation).
 
 Warning: the data is currently retrieved with 10m resolution (scale=10), so the 20m resolution bands are resampled.
