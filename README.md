@@ -8,6 +8,7 @@ See examples/gee_example.py and examples/aws_cog examples for simple usage.
 **WARNING**:
 * GEE data is currently retrieved with 10m resolution (scale=10), so the 20m resolution bands are resampled.
 * The biophysical processor implementation in this package does not currently use the convex hull check (see the Java code and ATBD) and does not have as extensive input/output validity flagging as the original version in SNAP.
+
 **TODO**:
 * Add option for specifying the request spatial resolution for GEE process. Already implemented for aws_cog process
 * Proper testing
