@@ -28,13 +28,19 @@ def get_s2_qi_and_data(aoi, req_params, qi_threshold=None, qi_filter=S2_FILTER1)
                 qi_threshold=qi_threshold,
                 qi_filter=qi_filter,
             )
-            dataset = dataset_dict[aoi.name]
+            if dataset_dict is None:
+                dataset = None
+            else:
+                dataset = dataset_dict[aoi.name]
 
     elif req_params.datasource == "aws_cog":
         import satellitetools.aws_cog as aws_cog
 
         items = aws_cog.search_s2_cogs(aoi, req_params)
-        qi_df = aws_cog.cog_get_s2_quality_info(aoi, req_params, items)
+        if items is None:
+            qi_df = None
+        else:
+            qi_df = aws_cog.cog_get_s2_quality_info(aoi, req_params, items)
 
         if qi_df is None or qi_df.empty:
             print("No new observations for area %s" % aoi.name)

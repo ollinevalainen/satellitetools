@@ -25,7 +25,7 @@ from satellitetools.common.sentinel2 import (
     S2_SCL_CLASSES,
     S2_REFL_TRANS,
     S2_FILTER1,
-    filter_s2_qi_dataframe,
+    filter_s2_qi_dataframe
 )
 
 
@@ -41,8 +41,12 @@ def search_s2_cogs(aoi, req_params):
     search = satsearch.Search(
         url=URL, collections=["sentinel-s2-l2a-cogs"], datetime=dates, bbox=bbox
     )
-    items = search.items()
-    print("Found {} available S2 acquisition dates.".format(len(items)))
+    if search.found()==0:
+        print("No available data for specified time!")
+        items = None
+    else:
+        items = search.items()
+        print("Found {} available S2 acquisition dates.".format(len(items)))
     return items
 
 
@@ -365,10 +369,10 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
 
     aoi_pixels = np.size(narray[0, 0, :, :]) - np.sum(np.isnan(narray[0, 0, :, :]))
 
-    scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose()
+    scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose().astype(np.int16)
 
     coords = {
-        "time": dataframe["Date"].values,
+        "time": dataframe["Date"].values.astype(np.datetime64),
         "band": [
             b.replace("B0", "B") for b in bands
         ],  # switch to be consistent with gee
