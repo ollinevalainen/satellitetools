@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Fri Mar 12 15:47:31 2021
+Module to get Sentinel-2 data from AWS Open data registry,
+where Sentinel-2 (level 2A) data is available as cloud-optimized
+geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
+
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
+Created on Fri Mar 12 15:47:31 2021
 """
 
 import satsearch
@@ -25,7 +29,7 @@ from satellitetools.common.sentinel2 import (
     S2_SCL_CLASSES,
     S2_REFL_TRANS,
     S2_FILTER1,
-    filter_s2_qi_dataframe
+    filter_s2_qi_dataframe,
 )
 
 
@@ -41,7 +45,7 @@ def search_s2_cogs(aoi, req_params):
     search = satsearch.Search(
         url=URL, collections=["sentinel-s2-l2a-cogs"], datetime=dates, bbox=bbox
     )
-    if search.found()==0:
+    if search.found() == 0:
         print("No available data for specified time!")
         items = None
     else:
@@ -222,7 +226,6 @@ def cog_get_s2_band_data(
         return None
     print("{} good observations available. Retrieving data...".format(len(filtered_qi)))
 
-    multiband_data = {}
     if align_to_band is None:
         align_to_band = req_params.bands[0]
     # Process the align_to_band first
@@ -336,9 +339,7 @@ def cog_get_s2_band_data(
 
 
 def cog_s2_data_to_xarray(aoi, req_params, dataframe):
-    """
-
-    """
+    """"""
 
     #  2D data
     bands = req_params.bands

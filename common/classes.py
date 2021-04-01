@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 10:45:05 2021
+Common classes for gee and aws_cog process.
+TODO: UPDATE docstrings!!
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
-
-        TODO: UPDATE docstrings!!
+Created on Tue Mar 16 10:45:05 2021
 """
 
 

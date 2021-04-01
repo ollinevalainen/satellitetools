@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Thu Feb  6 15:24:12 2020
-
 Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
 Warning: the data is currently retrieved with 10m resolution (scale=10), so
 the 20m resolution bands are resampled.
@@ -11,7 +9,7 @@ TODO: Add option for specifying the request spatial resolution.
 @author: Olli Nevalainen (olli.nevalainen@fmi.fi),
  Finnish Meteorological Institute)
 
-
+Created on Thu Feb  6 15:24:12 2020
 """
 import ee
 import datetime
@@ -37,19 +35,19 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
     Parameters
     ----------
-    AOIs : list or AOI instance
+    AOIs : list or AOI instance (common.classes.AOI)
         List of AOI instances or single AOI instance. If multiple AOIs
         proviveded the computation in GEE server is parallellized.
         If too many areas with long time range is provided, user might
         hit GEE memory limits. Then you should call this function
         sequentally to all AOIs.
-    req_params : S2RequestParams instance
-        S2RequestParams instance with request details.
+    req_params : RequestParams instance (common.classes.RequestParams)
+        RequestParams instance with request details.
 
     Returns
     -------
-    Nothing:
-        Computes qi attribute for the given AOI instances.
+    qi_df: Pandas Dataframe
+        Pandas dataframe with quality information.
 
     """
     # if single AOI instance, make a list
@@ -153,14 +151,16 @@ def ee_get_s2_data(
 
     Parameters
     ----------
-    AOIs : list or AOI instance
+    AOIs : list or AOI instance (common.classes.AOI)
         List of AOI instances or single AOI instance. If multiple AOIs
         proviveded the computation in GEE server is parallellized.
         If too many areas with long time range is provided, user might
         hit GEE memory limits. Then you should call this function
         sequentally to all AOIs. AOIs should have qi attribute computed first.
-    req_params : S2RequestParams instance
-        S2RequestParams instance with request details.
+    req_params : RequestParams instance (common.classes.RequestParams)
+        RequestParams instance with request details.
+    qi_dataframes: pandas Dataframe
+        Dataframe returned from ee_get_s2_quality_info with quality information.
     qi_threshold : float
         Threshold value to filter images based on used qi filter.
         qi filter holds labels of classes whose percentages within the AOI
@@ -169,7 +169,7 @@ def ee_get_s2_data(
         retrieved.
     qi_filter : list
         List of strings with class labels (of unwanted classes) used to compute qi value,
-        see qi_threhold. The default is s2_filter1 = ['NODATA',
+        see qi_threhold. The default is S2_FILTER1 = ['NODATA',
               'SATURATED_DEFECTIVE',
               'CLOUD_SHADOW',
               'UNCLASSIFIED',
@@ -180,8 +180,7 @@ def ee_get_s2_data(
 
     Returns
     -------
-    Nothing:
-        Computes data attribute for the given AOI instances.
+    s2_data: xarray Dataset
 
     """
     datestart = req_params.datestart
@@ -373,6 +372,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
         AOI instance.
     request_params : S2RequestParams
         S2RequestParams.
+    dataframe: Pandas Dataframe
+        Dataframe returned from s2_feature_collection_to_dataframes
     convert_to_reflectance : boolean, optional
         Convert S2 data from GEE (integers) to reflectances (floats),
         i,e, divide by 10000.
@@ -380,10 +381,7 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
 
     Returns
     -------
-    Nothing.
-        Converts the data atrribute dataframe to xarray Dataset.
-        xarray is better for handling multiband data. It also has
-        implementation for saving the data in NetCDF format.
+    ds: xarray Dataset
 
     """
     # check that all bands have full data!
@@ -497,14 +495,6 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
         Return 2D numpy array.
 
     """
-    # get the unique coordinates
-    uniqueYs = np.unique(y_coords)
-    uniqueXs = np.unique(x_coords)
-
-    # get number of columns and rows from coordinates
-    ncols = len(uniqueXs)
-    nrows = len(uniqueYs)
-
     # determine pixelsizes
     # ys = uniqueYs[1] - uniqueYs[0]
     # xs = uniqueXs[1] - uniqueXs[0]
