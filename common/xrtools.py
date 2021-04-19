@@ -7,9 +7,10 @@ Created on Tue Mar 16 11:36:13 2021
 """
 import pandas as pd
 import numpy as np
+from satellitetools.biophys import SNAP_BIO_RMSE
 
 
-def xr_dataset_to_timeseries(xr_dataset, variables):
+def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
     """Compute timeseries dataframe from xr dataset.
 
     Parameters
@@ -18,6 +19,13 @@ def xr_dataset_to_timeseries(xr_dataset, variables):
 
     variables : list
         list of varbiale names as string.
+
+    add_uncertainty : bool, default False
+        Adds variable {variable}_uncertainty to dataframe. Currently,
+        uncertainty is equal to standar error (se) or if variable is biophysical
+        variable from biophys_xarray, it sqrt(se^2 + RMSE^2) where RMSE is
+        the variable RMSE from the SNAP biophysical processor developers
+        (see biophys_xarray.py and linked ATBD).
 
     Returns
     -------
@@ -42,6 +50,9 @@ def xr_dataset_to_timeseries(xr_dataset, variables):
 
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
 
+        if add_uncertainty:
+            df = compute_uncertainty(df, var)
+
         if hasattr(xr_dataset, "aoi_pixels"):
             # compute how many of the nans are inside aoi (due to snap algorithm)
             out_of_aoi_pixels = (
@@ -50,4 +61,14 @@ def xr_dataset_to_timeseries(xr_dataset, variables):
             nans_inside_aoi = nans - out_of_aoi_pixels
             df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
 
+    return df
+
+
+def compute_uncertainty(df, var):
+    if var in SNAP_BIO_RMSE.keys():
+        df[var + "_uncertainty"] = np.sqrt(
+            df[var + "_se"] ** 2 + SNAP_BIO_RMSE[var] ** 2
+        )
+    else:
+        df[var + "_uncertainty"] = df[var + "_se"]
     return df

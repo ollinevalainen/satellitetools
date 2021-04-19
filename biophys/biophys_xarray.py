@@ -28,6 +28,13 @@ import xarray as xr
 # Read SNAP Biophysical processor neural network parameters
 
 SNAP_BIO_BANDS = ["B3", "B4", "B5", "B6", "B7", "B8A", "B11", "B12"]
+SNAP_BIO_RMSE = {
+    "fapar": 0.05,
+    "fcover": 0.04,
+    "lai": 0.89,
+    "lai_cab": 56,
+    "lai_cw": 0.03,
+}
 # path_to_s2tbx_biophysical
 snap_bio_path = os.path.join(os.path.dirname(__file__), "snap-auxdata/biophysical/2_1/")
 nn_params = {}
