@@ -234,6 +234,26 @@ def compute_ci_red_edge(dataset):
     return dataset.assign({"ci_red_edge": ci_red_edge})
 
 
+def compute_gcc(dataset):
+    """Compute GCC vegetation index.
+
+    Parameters
+    ----------
+    dataset : xarray dataset
+
+    Returns
+    -------
+    xarray dataset
+        Adds 'gcc' xr array to xr dataset.
+
+    """
+    b2 = dataset.band_data.sel(band="B2")
+    b3 = dataset.band_data.sel(band="B3")
+    b4 = dataset.band_data.sel(band="B4")
+    gcc = b3 / (b2 + b3 + b4)
+    return dataset.assign({"gcc": gcc})
+
+
 def run_snap_biophys(dataset, variable):
     """Compute specified variable using the SNAP algorithm.
 
