@@ -12,7 +12,11 @@ from satellitetools.biophys import SNAP_BIO_RMSE
 
 
 def xr_dataset_to_timeseries(
-    xr_dataset, variables, add_uncertainty=False, confidence_level="95"
+    xr_dataset,
+    variables,
+    add_uncertainty=False,
+    add_confidence_intervals=False,
+    confidence_level="95",
 ):
     """Compute timeseries dataframe from xr dataset.
 
@@ -60,10 +64,14 @@ def xr_dataset_to_timeseries(
 
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
 
+        # Switch to confidence intervals only if everything works
         if add_uncertainty:
-            df = compute_uncertainty(
-                df, xr_dataset, var, confidence_level=confidence_level
-            )
+            df = compute_uncertainty(df, var)
+
+            if add_confidence_intervals:
+                df = compute_confidence_intervals(
+                    df, xr_dataset, var, confidence_level=confidence_level
+                )
 
         if hasattr(xr_dataset, "aoi_pixels"):
             # compute how many of the nans are inside aoi (due to snap algorithm)
@@ -76,7 +84,17 @@ def xr_dataset_to_timeseries(
     return df
 
 
-def compute_uncertainty(df, xr_dataset, var, confidence_level="95"):
+def compute_uncertainty(df, var):
+    if var in SNAP_BIO_RMSE.keys():
+        df[var + "_uncertainty"] = np.sqrt(
+            df[var + "_se"] ** 2 + SNAP_BIO_RMSE[var] ** 2
+        )
+    else:
+        df[var + "_uncertainty"] = df[var + "_se"]
+    return df
+
+
+def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
 
     if confidence_level == "90":
         ci_multiplier = 1.645
