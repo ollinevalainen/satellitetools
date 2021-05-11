@@ -5,12 +5,15 @@ Created on Tue Mar 16 11:36:13 2021
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
+import sys
 import pandas as pd
 import numpy as np
 from satellitetools.biophys import SNAP_BIO_RMSE
 
 
-def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
+def xr_dataset_to_timeseries(
+    xr_dataset, variables, add_uncertainty=False, confidence_level="95"
+):
     """Compute timeseries dataframe from xr dataset.
 
     Parameters
@@ -21,11 +24,16 @@ def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
         list of varbiale names as string.
 
     add_uncertainty : bool, default False
-        Adds variable {variable}_uncertainty to dataframe. Currently,
+        Adds variable {variable}_uncertainty and confidence intervals to dataframe. Currently,
         uncertainty is equal to standar error (se) or if variable is biophysical
-        variable from biophys_xarray, it sqrt(se^2 + RMSE^2) where RMSE is
-        the variable RMSE from the SNAP biophysical processor developers
-        (see biophys_xarray.py and linked ATBD).
+        variable from biophys_xarray, it sqrt(se^2 + RMSE_mean^2) where RMSE_mean is
+        propagated uncertainty for the individual observations/pixels uncertainties.
+        Uncertainty for the individual pixels is considered to be the variable RMSE
+        from the SNAP biophysical processor developers
+        (see biophys_xarray.py and linked ATBD) (i.e. same for all pixels).
+
+    confidence_level : str, default "95"
+        Confidence level (%) for calculating the confidence interval bounds. Options "90", "95" & "99"
 
     Returns
     -------
@@ -37,6 +45,8 @@ def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
 
     for var in variables:
         df[var] = xr_dataset[var].mean(dim=["x", "y"])
+        df[var + "_F050"] = xr_dataset[var].median(dim=["x", "y"])
+
         df[var + "_std"] = xr_dataset[var].std(dim=["x", "y"])
 
         # nans occure due to missging data from 1D to 2D array
@@ -51,7 +61,9 @@ def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
 
         if add_uncertainty:
-            df = compute_uncertainty(df, var)
+            df = compute_uncertainty(
+                df, xr_dataset, var, confidence_level=confidence_level
+            )
 
         if hasattr(xr_dataset, "aoi_pixels"):
             # compute how many of the nans are inside aoi (due to snap algorithm)
@@ -64,11 +76,47 @@ def xr_dataset_to_timeseries(xr_dataset, variables, add_uncertainty=False):
     return df
 
 
-def compute_uncertainty(df, var):
+def compute_uncertainty(df, xr_dataset, var, confidence_level="95"):
+
+    if confidence_level == "90":
+        ci_multiplier = 1.645
+        ci_min = "_F005"
+        ci_max = "_F095"
+    elif confidence_level == "95":
+        ci_multiplier = 1.96
+        ci_min = "_F0025"
+        ci_max = "_F0975"
+    elif confidence_level == "99":
+        ci_multiplier = 2.576
+        ci_min = "_F0005"
+        ci_max = "_F0995"
+    else:
+        sys.exit("Unknown confidence level")
+
     if var in SNAP_BIO_RMSE.keys():
-        df[var + "_uncertainty"] = np.sqrt(
-            df[var + "_se"] ** 2 + SNAP_BIO_RMSE[var] ** 2
-        )
+        nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
+        n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
+        # propagated RMSE for the
+        # mean value (RMSE as uncertainty for individual observations/pixels)
+        rmse_mean = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 for i in range(n)])) / n
+
+        # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+        # 20 = 20 m which is the SNAP_BIO function standard resolution
+        resampling_ratio = np.abs(xr_dataset.x[1] - xr_dataset.x[0]) / 20
+        if resampling_ratio > 1:
+            rmse_mean = rmse_mean * resampling_ratio / np.sqrt(resampling_ratio)
+
+        df[var + "_uncertainty"] = np.sqrt(df[var + "_se"] ** 2 + rmse_mean ** 2)
+
     else:
         df[var + "_uncertainty"] = df[var + "_se"]
+
+    # uncertainty to confidence intervals
+    df[var + ci_min] = df[var] - ci_multiplier * df[var + "_uncertainty"]
+    df[var + ci_max] = df[var] + ci_multiplier * df[var + "_uncertainty"]
+
+    if var in SNAP_BIO_RMSE.keys():
+        # Cap unrealistic negative values to 0
+        df[var + ci_min][df[var + ci_min] < 0] = 0
+
     return df
