@@ -8,6 +8,7 @@ Created on Tue Mar 16 11:36:13 2021
 import sys
 import pandas as pd
 import numpy as np
+import xarray as xr
 from satellitetools.biophys import SNAP_BIO_RMSE
 
 
@@ -94,6 +95,11 @@ def compute_uncertainty(df, var):
     return df
 
 
+def propagate_rmses(sample_n, rmse):
+    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * sample_n)) / sample_n
+    return propagated_rmse
+
+
 def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
 
     if confidence_level == "90":
@@ -113,10 +119,19 @@ def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
 
     if var in SNAP_BIO_RMSE.keys():
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
-        n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
+        sample_ns = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
         # propagated RMSE for the
         # mean value (RMSE as uncertainty for individual observations/pixels)
-        rmse_mean = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 for i in range(n)])) / n
+        rmse_means = xr.apply_ufunc(
+            propagate_rmses,
+            sample_ns,
+            input_core_dims=[["time"]],
+            kwargs={"rmse": SNAP_BIO_RMSE[var]},
+            # dask="allowed",
+            vectorize=True,
+        )
+        print(rmse_means)
+        # rmse_means = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 ] * n)) / n
 
         # if data is upsampled, take this into account in uncertainty (n "artificially increased")
         # 20 = 20 m which is the SNAP_BIO function standard resolution
