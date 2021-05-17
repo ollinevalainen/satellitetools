@@ -95,23 +95,23 @@ def compute_uncertainty(df, var):
     return df
 
 
-def propagate_rmses(sample_n, rmse):
-    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * sample_n)) / sample_n
+def propagate_rmse(n, rmse):
+    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * n)) / n
     return propagated_rmse
 
 
 def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
 
     if confidence_level == "90":
-        ci_multiplier = 1.645
+        z_score = 1.645
         ci_min = "_F005"
         ci_max = "_F095"
     elif confidence_level == "95":
-        ci_multiplier = 1.96
+        z_score = 1.96
         ci_min = "_F0025"
         ci_max = "_F0975"
     elif confidence_level == "99":
-        ci_multiplier = 2.576
+        z_score = 2.576
         ci_min = "_F0005"
         ci_max = "_F0995"
     else:
@@ -119,18 +119,12 @@ def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
 
     if var in SNAP_BIO_RMSE.keys():
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
-        sample_ns = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
+        sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
         # propagated RMSE for the
         # mean value (RMSE as uncertainty for individual observations/pixels)
-        rmse_means = xr.apply_ufunc(
-            propagate_rmses,
-            sample_ns,
-            input_core_dims=[["time"]],
-            kwargs={"rmse": SNAP_BIO_RMSE[var]},
-            # dask="allowed",
-            vectorize=True,
+        rmse_mean = xr.apply_ufunc(
+            propagate_rmse, sample_n, kwargs={"rmse": SNAP_BIO_RMSE[var]}
         )
-        print(rmse_means)
         # rmse_means = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 ] * n)) / n
 
         # if data is upsampled, take this into account in uncertainty (n "artificially increased")
@@ -145,8 +139,8 @@ def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
         df[var + "_uncertainty"] = df[var + "_se"]
 
     # uncertainty to confidence intervals
-    df[var + ci_min] = df[var] - ci_multiplier * df[var + "_uncertainty"]
-    df[var + ci_max] = df[var] + ci_multiplier * df[var + "_uncertainty"]
+    df[var + ci_min] = df[var] - z_score * df[var + "_uncertainty"]
+    df[var + ci_max] = df[var] + z_score * df[var + "_uncertainty"]
 
     if var in SNAP_BIO_RMSE.keys():
         # Cap unrealistic negative values to 0
