@@ -49,11 +49,6 @@ def xr_dataset_to_timeseries(
     df = pd.DataFrame({"Date": pd.to_datetime(xr_dataset.time.values)})
 
     for var in variables:
-        df[var] = xr_dataset[var].mean(dim=["x", "y"])
-        df[var + "_F050"] = xr_dataset[var].median(dim=["x", "y"])
-
-        df[var + "_std"] = xr_dataset[var].std(dim=["x", "y"])
-
         # nans occure due to missging data from 1D to 2D array
         # (pixels outside the polygon),
         # from snap algorihtm nans occure due to input/output ouf of bounds
@@ -63,15 +58,27 @@ def xr_dataset_to_timeseries(
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
 
+        # Filter dates with all pixels equal to nan (i.e. sample n = 0)
+        non_zero_n = np.where(sample_n != 0)[0]
+        xr_dataset = xr_dataset.isel(time=non_zero_n)
+        sample_n = sample_n.isel(time=non_zero_n)
+        nans = nans.isel(time=non_zero_n)
+        # Drop also from df
+        df = df.iloc[non_zero_n]
+
+        df[var] = xr_dataset[var].mean(dim=["x", "y"])
+        df[var + "_F050"] = xr_dataset[var].median(dim=["x", "y"])
+
+        df[var + "_std"] = xr_dataset[var].std(dim=["x", "y"])
+
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
 
-        # Switch to confidence intervals only if everything works
-        if add_uncertainty:
-            df = compute_uncertainty(df, var)
+        if add_uncertainty or add_confidence_intervals:
+            df = compute_uncertainty_v2(df, xr_dataset, var)
 
             if add_confidence_intervals:
                 df = compute_confidence_intervals(
-                    df, xr_dataset, var, confidence_level=confidence_level
+                    df, var, confidence_level=confidence_level
                 )
 
         if hasattr(xr_dataset, "aoi_pixels"):
@@ -100,7 +107,37 @@ def propagate_rmse(n, rmse):
     return propagated_rmse
 
 
-def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
+def compute_uncertainty_v2(df, xr_dataset, var):
+
+    if var in SNAP_BIO_RMSE.keys():
+        nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
+        sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
+
+        # propagated RMSE for the
+        # mean value (RMSE as uncertainty for individual observations/pixels)
+        rmse_mean = xr.apply_ufunc(
+            propagate_rmse,
+            sample_n,
+            kwargs={"rmse": SNAP_BIO_RMSE[var]},
+            vectorize=True,
+        )
+        # rmse_means = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 ] * n)) / n
+
+        # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+        # 20 = 20 m which is the SNAP_BIO function standard resolution
+        resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+        if resampling_ratio > 1:
+            rmse_mean = rmse_mean * resampling_ratio / np.sqrt(resampling_ratio)
+
+        df[var + "_uncertainty"] = np.sqrt(df[var + "_se"] ** 2 + rmse_mean ** 2)
+
+    else:
+        df[var + "_uncertainty"] = df[var + "_se"]
+
+    return df
+
+
+def compute_confidence_intervals(df, var, confidence_level="95"):
 
     if confidence_level == "90":
         z_score = 1.645
@@ -117,33 +154,12 @@ def compute_confidence_intervals(df, xr_dataset, var, confidence_level="95"):
     else:
         sys.exit("Unknown confidence level")
 
-    if var in SNAP_BIO_RMSE.keys():
-        nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
-        sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
-        # propagated RMSE for the
-        # mean value (RMSE as uncertainty for individual observations/pixels)
-        rmse_mean = xr.apply_ufunc(
-            propagate_rmse, sample_n, kwargs={"rmse": SNAP_BIO_RMSE[var]}
-        )
-        # rmse_means = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 ] * n)) / n
-
-        # if data is upsampled, take this into account in uncertainty (n "artificially increased")
-        # 20 = 20 m which is the SNAP_BIO function standard resolution
-        resampling_ratio = np.abs(xr_dataset.x[1] - xr_dataset.x[0]) / 20
-        if resampling_ratio > 1:
-            rmse_mean = rmse_mean * resampling_ratio / np.sqrt(resampling_ratio)
-
-        df[var + "_uncertainty"] = np.sqrt(df[var + "_se"] ** 2 + rmse_mean ** 2)
-
-    else:
-        df[var + "_uncertainty"] = df[var + "_se"]
-
     # uncertainty to confidence intervals
     df[var + ci_min] = df[var] - z_score * df[var + "_uncertainty"]
     df[var + ci_max] = df[var] + z_score * df[var + "_uncertainty"]
 
     if var in SNAP_BIO_RMSE.keys():
-        # Cap unrealistic negative values to 0
-        df[var + ci_min][df[var + ci_min] < 0] = 0
+        # Cap unrealistic lower bound negative values to 0
+        df.loc[df[var + ci_min] < 0, var + ci_min] = 0
 
     return df
