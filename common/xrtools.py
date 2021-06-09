@@ -66,6 +66,17 @@ def xr_dataset_to_timeseries(
         # Drop also from df
         df = df.iloc[non_zero_n]
 
+        # adjust n if data is resampled
+        if var in SNAP_BIO_RMSE.keys():
+            # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+            # 20 = 20 m which is the SNAP_BIO function standard resolution
+            resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            pixel_multiplier = (
+                resampling_ratio ** 2
+            )  # doubling resolution quadruples amount of pixels etc.
+            if resampling_ratio > 1:
+                sample_n = sample_n / pixel_multiplier
+
         df[var] = xr_dataset[var].mean(dim=["x", "y"])
         df[var + "_F050"] = xr_dataset[var].median(dim=["x", "y"])
 
@@ -103,7 +114,7 @@ def compute_uncertainty(df, var):
 
 
 def propagate_rmse(n, rmse):
-    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * n)) / n
+    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * int(n))) / n
     return propagated_rmse
 
 
@@ -112,6 +123,17 @@ def compute_uncertainty_v2(df, xr_dataset, var):
     if var in SNAP_BIO_RMSE.keys():
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
+
+        # adjust n if data is resampled
+        if var in SNAP_BIO_RMSE.keys():
+            # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+            # 20 = 20 m which is the SNAP_BIO function standard resolution
+            resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            pixel_multiplier = (
+                resampling_ratio ** 2
+            )  # doubling resolution quadruples amount of pixels etc.
+            if resampling_ratio > 1:
+                sample_n = sample_n / pixel_multiplier
 
         # propagated RMSE for the
         # mean value (RMSE as uncertainty for individual observations/pixels)
@@ -125,9 +147,12 @@ def compute_uncertainty_v2(df, xr_dataset, var):
 
         # if data is upsampled, take this into account in uncertainty (n "artificially increased")
         # 20 = 20 m which is the SNAP_BIO function standard resolution
-        resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
-        if resampling_ratio > 1:
-            rmse_mean = rmse_mean * resampling_ratio / np.sqrt(resampling_ratio)
+        # resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+        # pixel_multiplier = (
+        #     resampling_ratio ** 2
+        # )  # doubling resolution quadruples amount of pixels etc.
+        # if resampling_ratio > 1:
+        #     rmse_mean = rmse_mean * pixel_multiplier / np.sqrt(pixel_multiplier)
 
         df[var + "_uncertainty"] = np.sqrt(df[var + "_se"] ** 2 + rmse_mean ** 2)
 
