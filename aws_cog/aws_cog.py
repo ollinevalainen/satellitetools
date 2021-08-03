@@ -253,7 +253,7 @@ def cog_get_s2_band_data(
         aoi_geometry_cog_crs = transform_crs(aoi.geometry, aoi.geometry_crs, cog_crs)
         bbox_cog_crs = list(aoi_geometry_cog_crs.bounds)
         # Get larger window for resampling
-        bbox_cog_crs = expand_bounds(bbox_cog_crs, 50)
+        bbox_cog_crs = expand_bounds(bbox_cog_crs, 80)
 
         # currently always includes "SCL" data
         for band in req_params.bands + ["SCL"]:
