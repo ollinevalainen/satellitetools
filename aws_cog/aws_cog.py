@@ -103,7 +103,7 @@ def cog_get_s2_scl_data(aoi, item):
     band = "SCL"
     # Transform aoi to pixel coordinates/window
     cog_transform = rasterio.transform.Affine(*item.assets[band]["proj:transform"][:-3])
-    window = rasterio.windows.from_bounds(*bbox_cog_crs, cog_transform)
+    window = rasterio.windows.from_bounds(*bbox_cog_crs, cog_transform).round_offsets()
 
     # Get windowed data
     file_url = item.assets[band]["href"]
@@ -135,8 +135,8 @@ def cog_get_s2_scl_data(aoi, item):
             memfile, aoi_geometry_cog_crs, no_data=SCL_NODATA
         )
 
-    scl_data = {"data": masked_data, "profile": masked_kwds}
-    return scl_data
+    scl_dict = {"data": masked_data, "profile": masked_kwds}
+    return scl_dict
 
 
 def cog_generate_qi_dict(aoi, item, scl_data):
@@ -262,7 +262,7 @@ def cog_get_s2_band_data(
             )
             window = rasterio.windows.from_bounds(
                 *bbox_cog_crs, cog_transform
-            )  # .round_offsets()
+            ).round_offsets()
 
             file_url = item.assets[band]["href"]
             # loop trough bands (file_url) here
@@ -272,13 +272,12 @@ def cog_get_s2_band_data(
                     raster_data = src.read(1, window=window)  # .astype(np.float64)
                 else:
                     raster_data = src.read(1, window=window) / S2_REFL_TRANS
-
                 # Form a new clipped rasterio dataset
                 transform = rasterio.windows.transform(window, kwds["transform"])
                 height = raster_data.shape[-2]
                 width = raster_data.shape[-1]
 
-                new_kwds = kwds
+                new_kwds = kwds.copy()
                 new_kwds.update(
                     transform=transform,
                     driver="GTiff",

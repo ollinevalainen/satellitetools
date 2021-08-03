@@ -18,7 +18,7 @@ def mask_raster(raster, aoi_geometry, no_data=0):
         masked_data, masked_transform = mask.mask(
             dataset,
             [aoi_geometry],
-            all_touched=True,
+            all_touched=False,
             invert=False,
             nodata=no_data,
             filled=True,
