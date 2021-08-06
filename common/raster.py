@@ -11,8 +11,7 @@ import rasterio
 from rasterio import mask
 from rasterio.enums import Resampling
 from rasterio.windows import get_data_window
-
-NODATA = -99999
+import numpy as np
 
 
 def mask_raster(raster, aoi_geometry, no_data=0):
@@ -23,7 +22,7 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             [aoi_geometry],
             all_touched=False,
             invert=False,
-            nodata=NODATA,
+            nodata=no_data,
             filled=True,
             crop=True,  # default False
             pad=False,
@@ -34,12 +33,20 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             transform=masked_transform,
             height=masked_data.shape[-2],
             width=masked_data.shape[-1],
-            nodata=NODATA,
+            nodata=no_data,
         )
+        if np.isnan(no_data):
+            # get_data_window does not work with np.nan, change temporary
+            NODATA = -99999
+            masked_data[np.isnan(masked_data)] = NODATA
+        else:
+            NODATA = no_data
+
         # crop nodata row and columns
         crop_window = get_data_window(masked_data, nodata=NODATA)
 
         cropped_data = masked_data[
+            0,
             crop_window.row_off : crop_window.row_off + crop_window.height,
             crop_window.col_off : crop_window.col_off + crop_window.width,
         ]

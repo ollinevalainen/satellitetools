@@ -360,7 +360,7 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
     profile = dataframe.loc[0]["profile"][0]
     x_coords, y_coords = create_coordinate_arrays(profile)
 
-    # translated to pixel center coordinates for netcdf/xarray dataset
+    # translate to pixel center coordinates for netcdf/xarray dataset
     dx = profile["transform"].a
     dy = profile["transform"].e
     x_coords_center = x_coords + dx / 2
@@ -391,6 +391,8 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
         "SCL": (["time", "x", "y"], scl_array),
     }
     var_dict = {var: (["time"], dataframe[var]) for var in list_vars}
+    source_series = pd.Series([req_params.datasource] * len(coords["time"]))
+    var_dict.update(datasource=(["time"], source_series))
     dataset_dict.update(var_dict)
 
     ds = xr.Dataset(
@@ -402,7 +404,6 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
             "tile_id": tileid,
             "aoi_geometry": aoi.geometry.to_wkt(),
             "aoi_pixels": aoi_pixels,
-            "datasource": req_params.datasource,
         },
     )
     ds = ds.transpose("time", "band", "y", "x")
