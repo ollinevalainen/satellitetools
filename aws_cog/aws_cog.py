@@ -360,6 +360,12 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
     profile = dataframe.loc[0]["profile"][0]
     x_coords, y_coords = create_coordinate_arrays(profile)
 
+    # translated to pixel center coordinates for netcdf/xarray dataset
+    dx = profile["transform"].a
+    dy = profile["transform"].e
+    x_coords_center = x_coords + dx / 2
+    y_coords_center = y_coords + dy / 2
+
     array = dataframe[bands].values
     # this will stack the array to ndarray with
     # dimension order = (time, band, x,y)
@@ -376,8 +382,8 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
         "band": [
             b.replace("B0", "B") for b in bands
         ],  # switch to be consistent with gee
-        "y": y_coords,
-        "x": x_coords,
+        "y": y_coords_center,
+        "x": x_coords_center,
     }
 
     dataset_dict = {
