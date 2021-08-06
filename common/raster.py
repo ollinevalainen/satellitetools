@@ -10,6 +10,9 @@ Created on Tue Mar 16 10:45:05 2021
 import rasterio
 from rasterio import mask
 from rasterio.enums import Resampling
+from rasterio.windows import get_data_window
+
+NODATA = -99999
 
 
 def mask_raster(raster, aoi_geometry, no_data=0):
@@ -20,9 +23,10 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             [aoi_geometry],
             all_touched=False,
             invert=False,
-            nodata=no_data,
+            nodata=NODATA,
             filled=True,
             crop=True,  # default False
+            pad=False,
         )
 
         masked_kwds = kwds
@@ -30,9 +34,27 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             transform=masked_transform,
             height=masked_data.shape[-2],
             width=masked_data.shape[-1],
-            nodata=no_data,
+            nodata=NODATA,
         )
-    return masked_data, masked_kwds
+        # crop nodata row and columns
+        crop_window = get_data_window(masked_data, nodata=NODATA)
+
+        cropped_data = masked_data[
+            crop_window.row_off : crop_window.row_off + crop_window.height,
+            crop_window.col_off : crop_window.col_off + crop_window.width,
+        ]
+
+        # change nodata to user-defined
+        cropped_data[cropped_data == NODATA] = no_data
+
+        cropped_kwds = masked_kwds.copy()
+        cropped_kwds.update(
+            height=crop_window.height,
+            width=crop_window.width,
+            nodata=no_data,
+            transform=rasterio.windows.transform(crop_window, masked_kwds["transform"]),
+        )
+    return cropped_data, cropped_kwds
 
 
 def resample_raster(raster, target_gsd, target_height=None, target_width=None):

@@ -324,7 +324,7 @@ def cog_get_s2_band_data(
                     memfile, aoi_geometry_cog_crs, no_data=no_data
                 )
 
-            data_dict.update({band: np.squeeze(masked_data)})
+            data_dict.update({band: masked_data})
             data_dict["profile"].append(masked_kwds)
 
         angles_dict = get_angles(item)
