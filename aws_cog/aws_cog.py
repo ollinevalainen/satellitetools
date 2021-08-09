@@ -24,11 +24,7 @@ from satellitetools.common.vector import (
     expand_bounds,
     create_coordinate_arrays,
 )
-from satellitetools.common.raster import (
-    mask_raster,
-    resample_raster,
-    resample_raster_v2,
-)
+from satellitetools.common.raster import mask_raster, resample_raster
 from satellitetools.common.sentinel2 import (
     S2_SCL_CLASSES,
     S2_REFL_TRANS,
