@@ -141,7 +141,7 @@ def cog_get_s2_scl_data(aoi, item):
 
 def cog_generate_qi_dict(aoi, item, scl_data):
 
-    date = pd.to_datetime(item.properties["datetime"])
+    date = pd.to_datetime(item.properties["datetime"], utc=True)
     qi_dict = {
         "Date": date,
         "name": aoi.name,

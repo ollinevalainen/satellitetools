@@ -360,6 +360,7 @@ def s2_feature_collection_to_dataframes(s2_feature_collection):
             if prop not in ["Date"]:  # 'crs' ,, 'projection'
                 tmp_dict.update({prop: data})
         dataframes[key] = pd.DataFrame(tmp_dict)
+        dataframes[key]["Date"] = pd.to_datetime(dataframes[key]["Date"], utc=True)
     return dataframes
 
 
