@@ -147,6 +147,11 @@ def cog_generate_qi_dict(aoi, item, scl_data):
             item.properties["sentinel:product_id"].split("_")[2], "%Y%m%dT%H%M%S"
         )
     )
+    projection = {
+        "type": "Projection",
+        "crs": "EPSG:{}".format(item.properties["proj:epsg"]),
+        "transform": item.assets["SCL"]["proj:transform"][:-3],
+    }
 
     qi_dict = {
         "Date": date,
@@ -158,7 +163,7 @@ def cog_generate_qi_dict(aoi, item, scl_data):
         ),
         "assetid": item.id,
         "productid": item.properties["sentinel:product_id"],
-        "projection": item.properties["proj:epsg"],
+        "projection": projection,
         "datasource": "aws_cog",
     }
 
