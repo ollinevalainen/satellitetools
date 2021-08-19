@@ -36,7 +36,7 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             nodata=no_data,
         )
         if np.isnan(no_data):
-            # get_data_window does not work with np.nan, change temporary
+            # get_data_window does not work with np.nan, change temporally
             NODATA = -99999
             masked_data[np.isnan(masked_data)] = NODATA
         else:
@@ -85,18 +85,10 @@ def resample_raster(raster, target_gsd, target_height=None, target_width=None):
         )
 
         # scale image transform
-        new_transform = rasterio.transform.Affine(
-            dataset.profile["transform"].a / scale_factor,
-            dataset.profile["transform"].b,
-            dataset.profile["transform"].c,
-            dataset.profile["transform"].d,
-            dataset.profile["transform"].e / scale_factor,
-            dataset.profile["transform"].f,
+        new_transform = dataset.transform * dataset.transform.scale(
+            (dataset.width / data.shape[-1]), (dataset.height / data.shape[-2])
         )
 
-        # new_transform = dataset.transform * dataset.transform.scale(
-        #     (dataset.width / data.shape[-1]), (dataset.height / data.shape[-2])
-        # )
         new_kwds = dataset.profile
         new_kwds.update(
             transform=new_transform, driver="GTiff", height=new_height, width=new_width

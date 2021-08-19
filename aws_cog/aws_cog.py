@@ -16,6 +16,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 import urllib
+import datetime
 
 import xmltodict
 from rasterio import MemoryFile
@@ -110,7 +111,7 @@ def cog_get_s2_scl_data(aoi, item):
     # loop trough bands (file_url) here
     with rasterio.open(file_url) as src:
         kwds = src.profile
-        raster_data = src.read(1, window=window)
+        raster_data = src.read(1, window=window, boundless=True)
 
         # Form a new clipped rasterio dataset
         transform = rasterio.windows.transform(window, kwds["transform"])
@@ -141,7 +142,11 @@ def cog_get_s2_scl_data(aoi, item):
 
 def cog_generate_qi_dict(aoi, item, scl_data):
 
-    date = pd.to_datetime(item.properties["datetime"])
+    date = pd.to_datetime(
+        datetime.datetime.strptime(
+            item.properties["sentinel:product_id"].split("_")[2], "%Y%m%dT%H%M%S"
+        )
+    )
     qi_dict = {
         "Date": date,
         "name": aoi.name,
@@ -163,8 +168,6 @@ def cog_generate_qi_dict(aoi, item, scl_data):
 
         qi_dict.update({scl_class: class_percentage})
 
-    # # transform dict to dataframe
-    # qi_datframe = pd.DataFrame.from_dict(qi_dict)
     return qi_dict
 
 
@@ -178,12 +181,19 @@ def cog_get_s2_quality_info(aoi, req_params, items):
         qi_df = qi_df.append(qi_dict, ignore_index=True)
 
     qi_df = qi_df.sort_values("Date").reset_index(drop=True)
-    # aoi.qi = qi_df
+    # Move "Date" to first columns
+    cols = list(qi_df)
+    cols.insert(0, cols.pop(cols.index("Date")))
+    qi_df = qi_df.loc[:, cols]
     return qi_df
 
 
 def cog_create_data_dict(aoi, item):
-    date = pd.to_datetime(item.properties["datetime"])
+    date = pd.to_datetime(
+        datetime.datetime.strptime(
+            item.properties["sentinel:product_id"].split("_")[2], "%Y%m%dT%H%M%S"
+        )
+    )
     data_dict = {
         "Date": date,
         "name": aoi.name,
@@ -200,13 +210,7 @@ def cog_create_data_dict(aoi, item):
 
 
 def cog_get_s2_band_data(
-    aoi,
-    req_params,
-    items,
-    qi_dataframe,
-    qi_threshold=0.02,
-    qi_filter=S2_FILTER1,
-    align_to_band=None,
+    aoi, req_params, items, qi_dataframe, qi_threshold=0.02, qi_filter=S2_FILTER1,
 ):
 
     filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
@@ -225,15 +229,6 @@ def cog_get_s2_band_data(
         print("No qualified observations with used tile")
         return None
     print("{} good observations available. Retrieving data...".format(len(filtered_qi)))
-
-    if align_to_band is None:
-        align_to_band = req_params.bands[0]
-    # Process the align_to_band first
-    req_params.bands.insert(
-        0, req_params.bands.pop(req_params.bands.index(align_to_band))
-    )
-
-    target_kwds = None
 
     # Dataframe to collect all data
     data_df = pd.DataFrame()
@@ -269,9 +264,11 @@ def cog_get_s2_band_data(
             with rasterio.open(file_url) as src:
                 kwds = src.profile
                 if band == "SCL":
-                    raster_data = src.read(1, window=window)  # .astype(np.float64)
+                    raster_data = src.read(1, window=window, boundless=True)
                 else:
-                    raster_data = src.read(1, window=window) / S2_REFL_TRANS
+                    raster_data = (
+                        src.read(1, window=window, boundless=True) / S2_REFL_TRANS
+                    )
                 # Form a new clipped rasterio dataset
                 transform = rasterio.windows.transform(window, kwds["transform"])
                 height = raster_data.shape[-2]
@@ -285,31 +282,20 @@ def cog_get_s2_band_data(
                     width=width,
                     dtype=str(raster_data.dtype),
                 )
-                # MOVE target_gsd if here if masking not done here
-                with MemoryFile() as memfile:
-                    with memfile.open(**new_kwds) as dataset:  # Open as DatasetWriter
-                        dataset.write(raster_data, 1)
+            # Resample data if needed
+            with MemoryFile() as memfile:
+                with memfile.open(**new_kwds) as dataset:  # Open as DatasetWriter
+                    dataset.write(raster_data, 1)
 
-                    if req_params.target_gsd != new_kwds["transform"].a:
-                        if band == align_to_band:
-                            resampled_data, resampled_kwds = resample_raster(
-                                memfile, req_params.target_gsd
-                            )
-                        else:
-                            resampled_data, resampled_kwds = resample_raster(
-                                memfile,
-                                req_params.target_gsd,
-                                target_height=target_kwds["height"],
-                                target_width=target_kwds["width"],
-                            )
+                if req_params.target_gsd != new_kwds["transform"].a:
+                    resampled_data, resampled_kwds = resample_raster(
+                        memfile, req_params.target_gsd
+                    )
 
-                        data = resampled_data
-                        new_kwds = resampled_kwds
-                    else:
-                        data = raster_data[np.newaxis, ...]
-
-            if band == align_to_band:
-                target_kwds = new_kwds.copy()
+                    data = resampled_data
+                    new_kwds = resampled_kwds
+                else:
+                    data = raster_data[np.newaxis, ...]
 
             # Mask data
             with MemoryFile() as memfile:
@@ -331,7 +317,7 @@ def cog_get_s2_band_data(
         data_dict.update(angles_dict)
         data_df = data_df.append(data_dict, ignore_index=True)
     data_df = data_df.sort_values("Date").reset_index(drop=True)
-    # aoi.data = data_df
+
     # Transform to xarray dataset
     data_ds = cog_s2_data_to_xarray(aoi, req_params, data_df)
     return data_ds
@@ -368,7 +354,7 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
 
     array = dataframe[bands].values
     # this will stack the array to ndarray with
-    # dimension order = (time, band, x,y)
+    # dimension order (time, band, x,y)
     narray = np.stack(
         [np.stack(array[:, b], axis=2) for b in range(len(bands))], axis=2
     ).transpose()

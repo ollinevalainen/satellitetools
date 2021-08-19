@@ -2,8 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
-Warning: the data is currently retrieved with 10m resolution (scale=10), so
-the 20m resolution bands are resampled.
+
 TODO: Add option for specifying the request spatial resolution.
 
 @author: Olli Nevalainen (olli.nevalainen@fmi.fi),
@@ -135,9 +134,6 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
     s2_qi = s2_feature_collection_to_dataframes(s2_qi_feature_collection)
     return s2_qi
-    # for a in AOIs:
-    #     name = a.name
-    #     a.qi = s2_qi[name]
 
 
 def ee_get_s2_data(
@@ -145,9 +141,7 @@ def ee_get_s2_data(
 ):
     """Get S2 data (level L2A, bottom of atmosphere data) from GEE.
 
-    Warning: the data is currently retrieved with 10m resolution (scale=10), so
-    the 20m resolution bands are resampled.
-    TODO: Add option for specifying the request spatial resolution.
+    Warning! All bands are resampled to resolution specified by req_params.target_gsd.
 
     Parameters
     ----------
@@ -186,6 +180,7 @@ def ee_get_s2_data(
     datestart = req_params.datestart
     dateend = req_params.dateend
     bands = req_params.bands
+    resolution = req_params.target_gsd
     # if single AOI instance, make a list
     if isinstance(AOIs, AOI):
         AOIs = list([AOIs])
@@ -256,7 +251,7 @@ def ee_get_s2_data(
                 .get([0])
             )
 
-            img = img.resample("bilinear").reproject(crs=crs, scale=10)
+            img = img.resample("bilinear").reproject(crs=crs, scale=resolution)
 
             # get the lat lon and add the ndvi
             image_grid = ee.Image.pixelCoordinates(ee.Projection(crs)).addBands(
@@ -265,7 +260,10 @@ def ee_get_s2_data(
 
             # apply reducer to list
             image_grid = image_grid.reduceRegion(
-                reducer=ee.Reducer.toList(), geometry=geom, maxPixels=1e8, scale=10
+                reducer=ee.Reducer.toList(),
+                geometry=geom,
+                maxPixels=1e8,
+                scale=resolution,
             )
 
             # get data into arrays
@@ -322,7 +320,7 @@ def ee_get_s2_data(
     for a in AOIs:
         name = a.name
         s2_data[name] = s2_data_to_xarray(a, req_params, s2_data[name])
-        # s2_data_to_xarray(a, req_params)
+
     return s2_data
 
 
@@ -354,10 +352,10 @@ def s2_feature_collection_to_dataframes(s2_feature_collection):
             for d in productid
         ]
 
-        tmp_dict.update({"Date": dates})  #  , 'crs': crs}
+        tmp_dict.update({"Date": dates})
         properties = s2_feature_collection["features"][featnum]["properties"]
         for prop, data in properties.items():
-            if prop not in ["Date"]:  # 'crs' ,, 'projection'
+            if prop not in ["Date"]:
                 tmp_dict.update({prop: data})
         dataframes[key] = pd.DataFrame(tmp_dict)
     return dataframes
@@ -435,10 +433,10 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
     array = dataframe[bands].values
 
     # this will stack the array to ndarray with
-    # dimension order = (time, band, x,y)
+    # dimension order (time, band, x,y)
     narray = np.stack(
         [np.stack(array[:, b], axis=2) for b in range(len(bands))], axis=2
-    ).transpose()  # .swapaxes(2, 3)
+    ).transpose()
 
     scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose()
 
@@ -469,7 +467,6 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
         },
     )
     ds = ds.transpose("time", "band", "y", "x")
-    # aoi.data = ds
     return ds
 
 
@@ -512,47 +509,3 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
     arr = np.flipud(arr)
     return arr
 
-
-# MOVED TO common.xrtools. Remove if no problems.
-
-# def xr_dataset_to_timeseries(xr_dataset, variables):
-#     """Compute timeseries dataframe from xr dataset.
-
-#     Parameters
-#     ----------
-#     xr_dataset : xarray dataset
-
-#     variables : list
-#         list of varbiale names as string.
-
-#     Returns
-#     -------
-#     df : pandas dataframe
-#         Pandas dataframe with mean, std, se and percentage of NaNs inside AOI.
-
-#     """
-#     df = pd.DataFrame({"Date": pd.to_datetime(xr_dataset.time.values)})
-
-#     for var in variables:
-#         df[var] = xr_dataset[var].mean(dim=["x", "y"])
-#         df[var + "_std"] = xr_dataset[var].std(dim=["x", "y"])
-
-#         # nans occure due to missging data from 1D to 2D array
-#         # (pixels outside the polygon),
-#         # from snap algorihtm nans occure due to input/output ouf of bounds
-#         # checking.
-#         # TODO: flaggging with snap biophys algorith or some other solution to
-#         # check which nan are from snap    algorithm and which from 1d to 2d transformation
-#         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
-#         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
-
-#         # compute how many of the nans are inside aoi (due to snap algorithm)
-#         out_of_aoi_pixels = (
-#             len(xr_dataset[var].x) * len(xr_dataset[var].y) - xr_dataset.aoi_pixels
-#         )
-#         nans_inside_aoi = nans - out_of_aoi_pixels
-#         df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
-
-#         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
-
-#     return df

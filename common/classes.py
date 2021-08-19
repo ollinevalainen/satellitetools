@@ -7,6 +7,11 @@ TODO: UPDATE docstrings!!
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021
 """
+import sys
+from satellitetools.common.sentinel2 import (
+    S2_BANDS_COG,
+    S2_BANDS_GEE,
+)
 
 
 class RequestParams:
@@ -24,7 +29,7 @@ class RequestParams:
         'B6', 'B7', 'B8A', 'B11', 'B12'].
     """
 
-    def __init__(self, datestart, dateend, datasource, bands=None, target_gsd=None):
+    def __init__(self, datestart, dateend, datasource, bands, target_gsd=20):
         """.
 
         Parameters
@@ -33,11 +38,15 @@ class RequestParams:
             Starting date for data request in form "2019-01-01".
         dateend : str
             Starting date for data request in form "2019-12-31".
+        datasource : str
+            Source of data. Current options "gee" og "aws_cog".
         bands : list, optional
             List of strings with band name.
             The default is ['B3', 'B4', 'B5',
             'B6', 'B7', 'B8A', 'B11', 'B12'].
-
+        target_gsd : float
+            Requested Ground Sampling Distance (GSD). All bands will be resampled to this resolution.
+            Default 20m.
         Returns
         -------
         None.
@@ -47,12 +56,16 @@ class RequestParams:
         self.datestart = datestart
         self.dateend = dateend
         self.datasource = datasource  # "gee" or  "aws_cog"
-        self.bands = bands
-        # self.bands = bands if bands else default_bands
-        self.target_gsd = (
-            target_gsd if target_gsd else 20.0
-        )  # use this when target_gsd implemented to gee
-        # self.target_gsd = target_gsd
+        if bands:
+            self.bands = bands
+        else:
+            if datasource == "gee":
+                self.bands = S2_BANDS_GEE
+            elif datasource == "aws_cog":
+                self.bands = S2_BANDS_COG
+            else:
+                sys.exit("""Bands not given and unknown datasource.""")
+        self.target_gsd = target_gsd
 
 
 class AOI:
