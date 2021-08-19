@@ -358,6 +358,8 @@ def s2_feature_collection_to_dataframes(s2_feature_collection):
             if prop not in ["Date"]:
                 tmp_dict.update({prop: data})
         dataframes[key] = pd.DataFrame(tmp_dict)
+        dataframes[key]["Date"] = pd.to_datetime(dataframes[key]["Date"], utc=True)
+        dataframes[key]["datasource"] = "gee"
     return dataframes
 
 
@@ -399,7 +401,6 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
         "productid",
         "sun_azimuth",
         "sun_zenith",
-        "system_index",
         "view_azimuth",
         "view_zenith",
     ]
@@ -452,6 +453,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
         "SCL": (["time", "x", "y"], scl_array),
     }
     var_dict = {var: (["time"], dataframe[var]) for var in list_vars}
+    source_series = pd.Series([request_params.datasource] * len(coords["time"]))
+    var_dict.update(datasource=(["time"], source_series))
     dataset_dict.update(var_dict)
 
     ds = xr.Dataset(
@@ -463,7 +466,6 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
             "tile_id": tileid,
             "aoi_geometry": aoi.geometry.to_wkt(),
             "aoi_pixels": aoi_pixels,
-            "datasource": request_params.datasource,
         },
     )
     ds = ds.transpose("time", "band", "y", "x")
