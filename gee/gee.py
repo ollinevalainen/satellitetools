@@ -361,6 +361,7 @@ def s2_feature_collection_to_dataframes(s2_feature_collection):
                 tmp_dict.update({prop: data})
         dataframes[key] = pd.DataFrame(tmp_dict)
         dataframes[key]["Date"] = pd.to_datetime(dataframes[key]["Date"], utc=True)
+        dataframes[key]["datasource"] = "gee"
     return dataframes
 
 

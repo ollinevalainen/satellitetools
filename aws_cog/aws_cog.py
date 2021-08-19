@@ -153,6 +153,7 @@ def cog_generate_qi_dict(aoi, item, scl_data):
         "assetid": item.id,
         "productid": item.properties["sentinel:product_id"],
         "projection": item.properties["proj:epsg"],
+        "datasource": "aws_cog",
     }
 
     # number of pixels inside aoi, excludes out-of-aoi pixels
