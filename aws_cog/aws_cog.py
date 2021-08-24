@@ -9,7 +9,7 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Fri Mar 12 15:47:31 2021
 """
-
+import sys
 import satsearch
 import rasterio
 import numpy as np
@@ -217,7 +217,7 @@ def cog_create_data_dict(aoi, item):
 
 
 def cog_get_s2_band_data(
-    aoi, req_params, items, qi_dataframe, qi_threshold=0.02, qi_filter=S2_FILTER1,
+    aoi, req_params, items, qi_dataframe, qi_threshold=0.02, qi_filter=S2_FILTER1
 ):
 
     filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
@@ -351,6 +351,32 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
     tileid = dataframe["tileid"][0]
 
     profile = dataframe.loc[0]["profile"][0]
+
+    # check that shapes match, THIS IS MAINLY FOR DEBUGGING TO CATCH THE ERROR
+    # FIX THE ERRORS!
+    # band to band comparison
+    for image in dataframe.itertuples():
+        for band in bands[1:]:
+            if getattr(image, bands[0]).shape != getattr(image, band).shape:
+                sys.exit(
+                    """Shape of bands doesn't match for image {} """.format(
+                        image.productid
+                    )
+                )
+
+    # image to image comparison
+    for image in dataframe.itertuples(index=True):
+        if image.Index == 0:
+            first_image = image
+            continue
+
+        if getattr(image, bands[0]).shape != getattr(first_image, bands[0]).shape:
+            sys.exit(
+                """Mismatch between shapes with images {} and {}""".format(
+                    first_image.productid, image.productid
+                )
+            )
+
     x_coords, y_coords = create_coordinate_arrays(profile)
 
     # translate to pixel center coordinates for netcdf/xarray dataset
