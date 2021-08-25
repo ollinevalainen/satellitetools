@@ -100,6 +100,9 @@ def filter_s2_qi_dataframe(s2_qi_dataframe, qi_thresh, s2_filter=S2_FILTER1):
         Filtered dataframe.
 
     """
+
+    # Drop if SCL data is nan
+    s2_qi_dataframe = s2_qi_dataframe.dropna(axis=0, subset=S2_SCL_CLASSES)
     filtered_s2_qi_df = s2_qi_dataframe.loc[
         s2_qi_dataframe[s2_filter].sum(axis=1) < qi_thresh
     ]
