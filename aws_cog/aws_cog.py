@@ -9,7 +9,7 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Fri Mar 12 15:47:31 2021
 """
-
+import sys
 import satsearch
 import rasterio
 import numpy as np
@@ -17,6 +17,7 @@ import pandas as pd
 import xarray as xr
 import urllib
 import datetime
+from collections import Counter
 
 import xmltodict
 from rasterio import MemoryFile
@@ -330,6 +331,50 @@ def cog_get_s2_band_data(
     return data_ds
 
 
+def check_shapes(dataframe, bands):
+
+    # band to band comparison
+    dataframe_cp = dataframe.copy()
+    drop_these = []
+    for image in dataframe_cp.itertuples(index=True):
+        for band in bands[1:]:
+            if getattr(image, bands[0]).shape != getattr(image, band).shape:
+
+                print(
+                    """Shape of bands doesn't match for image {} """.format(
+                        image.productid
+                    )
+                )
+                drop_these.append(image.Index)
+                break
+    # Drop images that have inconsistend shapes of bands
+    dataframe.drop(index=drop_these, inplace=True)
+
+    # solve most common shape
+    shapes = list(dataframe[bands[0]].apply(lambda x: np.shape(x)))
+    counts = Counter(shapes)
+    most_common_shape = counts.most_common(1)[0][0]
+
+    dataframe_cp = dataframe.copy()
+    drop_these = []
+    # image to image comparison
+    for image in dataframe_cp.itertuples(index=True):
+
+        if getattr(image, bands[0]).shape != most_common_shape:
+            print(
+                """Image {} uncommon shape. Dropping it.""".format(
+                    image.productid
+                )
+            )
+            print("Most common shape = {}".format(most_common_shape))
+            print("Shape counts {}".format(counts))
+            drop_these.append(image.Index)
+
+    cleaned_dataframe = dataframe.drop(index=drop_these).reset_index(drop=True)
+
+    return cleaned_dataframe
+
+
 def cog_s2_data_to_xarray(aoi, req_params, dataframe):
     """"""
 
@@ -346,11 +391,15 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
         "view_zenith",
     ]
 
+    # check that shapes of images and bands match
+    dataframe = check_shapes(dataframe, bands)
+
     # crs from projection
     crs = dataframe["projection"][0]
     tileid = dataframe["tileid"][0]
 
     profile = dataframe.loc[0]["profile"][0]
+
     x_coords, y_coords = create_coordinate_arrays(profile)
 
     # translate to pixel center coordinates for netcdf/xarray dataset
