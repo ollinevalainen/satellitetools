@@ -69,6 +69,16 @@ S2_FILTER1 = [
     "SNOW_ICE",
 ]
 
+S2_FILTER2 = [
+    "NODATA",
+    "SATURATED_DEFECTIVE",
+    "CLOUD_SHADOW",
+    "CLOUD_MEDIUM_PROBA",
+    "CLOUD_HIGH_PROBA",
+    "THIN_CIRRUS",
+    "SNOW_ICE",
+]
+
 
 def filter_s2_qi_dataframe(s2_qi_dataframe, qi_thresh, s2_filter=S2_FILTER1):
     """Filter qi dataframe.
