@@ -26,6 +26,7 @@ Old codes include old version of gee. Stored because it had some Landsat-8 proce
 * scipy
 * sat-search (aws_cog only, https://github.com/sat-utils/sat-search)
 * xlmtodict (aws_cog only)
+* rasterio (aws_cog only)
 
 
 **Some explanation of the satellite data filtering process used:**
