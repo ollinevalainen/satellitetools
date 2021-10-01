@@ -321,7 +321,7 @@ def run_snap_biophys(dataset, variable):
     return dataset.assign({variable.lower(): arr})
 
 
-def estimate_gpp_vi_lue(vi, daily_par, model_name="ci_red_edge_1"):
+def estimate_gpp_vi_lue(vi, daily_par, model_name):
     """Estimate GPP using simple vegetation index based models and PAR.
 
     This function has not been properly tested (i.e.used for a while)
@@ -334,7 +334,6 @@ def estimate_gpp_vi_lue(vi, daily_par, model_name="ci_red_edge_1"):
         Daily PAR as MJ/s/m².
     model_name : str, optional
         Name of the model (see biophys_xarray.GPP_LUE_models).
-        The default is 'ci_red_edge_1'.
 
     Returns
     -------
@@ -343,14 +342,12 @@ def estimate_gpp_vi_lue(vi, daily_par, model_name="ci_red_edge_1"):
 
     """
     vi_name = "_".join(model_name.split("_")[:-1])
-    gpp = GPP_LUE_models[vi_name][model_name]["model"](
-        np.array(vi), np.array(daily_par)
-    )
+    gpp = GPP_LUE_MODELS[vi_name][model_name]["model"](vi, daily_par)
     return gpp
 
 
 # GPP estimation models
-GPP_LUE_models = {
+GPP_LUE_MODELS = {
     "ci_red_edge": {
         "ci_red_edge_1": {
             "model": lambda vi, par: 4.80 * np.log(vi * par * 1e3) - 37.93,
