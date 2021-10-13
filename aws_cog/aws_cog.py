@@ -218,7 +218,13 @@ def cog_create_data_dict(aoi, item):
 
 
 def cog_get_s2_band_data(
-    aoi, req_params, items, qi_dataframe, qi_threshold=0.02, qi_filter=S2_FILTER1,
+    aoi,
+    req_params,
+    items,
+    qi_dataframe,
+    qi_threshold=0.02,
+    qi_filter=S2_FILTER1,
+    yield_data=False,
 ):
 
     filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
@@ -324,8 +330,10 @@ def cog_get_s2_band_data(
         angles_dict = get_angles(item)
         data_dict.update(angles_dict)
         data_df = data_df.append(data_dict, ignore_index=True)
+        if yield_data:
+            data_ds = cog_s2_data_to_xarray(aoi, req_params, data_df)
+            yield data_ds, item
     data_df = data_df.sort_values("Date").reset_index(drop=True)
-
     # Transform to xarray dataset
     data_ds = cog_s2_data_to_xarray(aoi, req_params, data_df)
     return data_ds
@@ -361,11 +369,7 @@ def check_shapes(dataframe, bands):
     for image in dataframe_cp.itertuples(index=True):
 
         if getattr(image, bands[0]).shape != most_common_shape:
-            print(
-                """Image {} uncommon shape. Dropping it.""".format(
-                    image.productid
-                )
-            )
+            print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
             print("Most common shape = {}".format(most_common_shape))
             print("Shape counts {}".format(counts))
             drop_these.append(image.Index)
