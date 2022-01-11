@@ -77,6 +77,10 @@ def xr_dataset_to_timeseries(
             if resampling_ratio > 1:
                 sample_n = sample_n / pixel_multiplier
 
+                sample_n[
+                    sample_n < 1
+                ] = 1  # with small areas the adjusted sample_n might be < 1
+
         df[var] = xr_dataset[var].mean(dim=["x", "y"])
         df[var + "_F050"] = xr_dataset[var].median(dim=["x", "y"])
 
@@ -134,6 +138,10 @@ def compute_uncertainty_v2(df, xr_dataset, var):
             )  # doubling resolution quadruples amount of pixels etc.
             if resampling_ratio > 1:
                 sample_n = sample_n / pixel_multiplier
+
+                sample_n[
+                    sample_n < 1
+                ] = 1  # with small areas the adjusted sample_n might be < 1
 
         # propagated RMSE for the
         # mean value (RMSE as uncertainty for individual observations/pixels)
