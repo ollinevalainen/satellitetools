@@ -464,7 +464,7 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
             "name": aoi.name,
             "crs": crs,
             "tile_id": tileid,
-            "aoi_geometry": aoi.geometry.to_wkt(),
+            "aoi_geometry": aoi.geometry.wkt,
             "aoi_pixels": aoi_pixels,
         },
     )
@@ -510,4 +510,3 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
         arr[y_idx, x_idx] = data
     arr = np.flipud(arr)
     return arr
-

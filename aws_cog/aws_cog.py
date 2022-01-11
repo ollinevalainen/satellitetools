@@ -218,7 +218,12 @@ def cog_create_data_dict(aoi, item):
 
 
 def cog_get_s2_band_data(
-    aoi, req_params, items, qi_dataframe, qi_threshold=0.02, qi_filter=S2_FILTER1,
+    aoi,
+    req_params,
+    items,
+    qi_dataframe,
+    qi_threshold=0.02,
+    qi_filter=S2_FILTER1,
 ):
 
     filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
@@ -361,11 +366,7 @@ def check_shapes(dataframe, bands):
     for image in dataframe_cp.itertuples(index=True):
 
         if getattr(image, bands[0]).shape != most_common_shape:
-            print(
-                """Image {} uncommon shape. Dropping it.""".format(
-                    image.productid
-                )
-            )
+            print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
             print("Most common shape = {}".format(most_common_shape))
             print("Shape counts {}".format(counts))
             drop_these.append(image.Index)
@@ -444,7 +445,7 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
             "name": aoi.name,
             "crs": crs,
             "tile_id": tileid,
-            "aoi_geometry": aoi.geometry.to_wkt(),
+            "aoi_geometry": aoi.geometry.wkt,
             "aoi_pixels": aoi_pixels,
         },
     )
