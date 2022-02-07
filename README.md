@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/270676132.svg)](https://zenodo.org/badge/latestdoi/270676132)
+
 # satellitetools
 This package is at the moment under constant development and use in our research projects at FMI (Finnish Meteorological Institute). Currently developed and used in agricultural study areas. Sorry for lack of documentation at the moment. We are currently preparing scientific papers where this package is used. Please feel free to contact me in case you want more information about this package.
 
