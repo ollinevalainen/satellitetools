@@ -10,17 +10,18 @@ TODO: Add option for specifying the request spatial resolution.
 
 Created on Thu Feb  6 15:24:12 2020
 """
-import ee
 import datetime
-import pandas as pd
-import numpy as np
-import xarray as xr
 from functools import reduce
+
+import ee
+import numpy as np
+import pandas as pd
+import xarray as xr
 from satellitetools.common.classes import AOI
 from satellitetools.common.sentinel2 import (
-    S2_SCL_CLASSES,
-    S2_REFL_TRANS,
     S2_FILTER1,
+    S2_REFL_TRANS,
+    S2_SCL_CLASSES,
     filter_s2_qi_dataframe,
 )
 
@@ -392,6 +393,9 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
     consistent_data = reduce(lambda a, b: a & b, datalengths)
     dataframe = dataframe[consistent_data]
 
+    if dataframe.empty:
+        print("No consistent data available.")
+        return None
     #  2D data
     bands = request_params.bands
 
