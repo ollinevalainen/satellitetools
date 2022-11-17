@@ -80,7 +80,10 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
             # apply reducer to list
             img = img.reduceRegion(
-                reducer=ee.Reducer.toList(), geometry=area, maxPixels=1e8, scale=20
+                reducer=ee.Reducer.toList(),
+                geometry=area,
+                maxPixels=1e8,
+                scale=req_params.qi_evaluation_scale,
             )
 
             # get data into arrays
