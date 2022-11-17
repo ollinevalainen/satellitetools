@@ -29,7 +29,15 @@ class RequestParams:
         'B6', 'B7', 'B8A', 'B11', 'B12'].
     """
 
-    def __init__(self, datestart, dateend, datasource, bands, target_gsd=20):
+    def __init__(
+        self,
+        datestart,
+        dateend,
+        datasource,
+        bands,
+        target_gsd=20,
+        qi_evaluation_scale=20,
+    ):
         """.
 
         Parameters
@@ -47,6 +55,8 @@ class RequestParams:
         target_gsd : float
             Requested Ground Sampling Distance (GSD). All bands will be resampled to this resolution.
             Default 20m.
+        qi_evaluation_scale : float
+            Define alternative scale for quality evaluation. Default is 20 m as it is Sentinel-2 SCL band's resolution.
         Returns
         -------
         None.
@@ -66,6 +76,7 @@ class RequestParams:
             else:
                 sys.exit("""Bands not given and unknown datasource.""")
         self.target_gsd = target_gsd
+        self.qi_evaluation_scale = qi_evaluation_scale
 
 
 class AOI:
