@@ -61,38 +61,27 @@ for var in ["FAPAR", "FCOVER", "LAI", "LAI_Cab", "LAI_Cw"]:
         snap_bio_path + "%s/%s_ExtremeCases" % (var, var), delimiter=","
     )
 
-    if var == "FCOVER":
-        nn_params[var] = {
-            "norm_minmax": norm_minmax,
-            "denorm_minmax": denorm_minmax,
-            "layer1_weights": layer1_weights,
-            "layer1_bias": layer1_bias,
-            "layer2_weights": layer2_weights,
-            "layer2_bias": layer2_bias,
-            "extreme_cases": extreme_cases,
-        }
-    else:
-        defdom_min = np.loadtxt(
-            snap_bio_path + "%s/%s_DefinitionDomain_MinMax" % (var, var), delimiter=","
-        )[0, :].reshape(-1, 1)
-        defdom_max = np.loadtxt(
-            snap_bio_path + "%s/%s_DefinitionDomain_MinMax" % (var, var), delimiter=","
-        )[1, :].reshape(-1, 1)
-        defdom_grid = np.loadtxt(
-            snap_bio_path + "%s/%s_DefinitionDomain_Grid" % (var, var), delimiter=","
-        )
-        nn_params[var] = {
-            "norm_minmax": norm_minmax,
-            "denorm_minmax": denorm_minmax,
-            "layer1_weights": layer1_weights,
-            "layer1_bias": layer1_bias,
-            "layer2_weights": layer2_weights,
-            "layer2_bias": layer2_bias,
-            "defdom_min": defdom_min,
-            "defdom_max": defdom_max,
-            "defdom_grid": defdom_grid,
-            "extreme_cases": extreme_cases,
-        }
+    defdom_min = np.loadtxt(
+        snap_bio_path + "%s/%s_DefinitionDomain_MinMax" % (var, var), delimiter=","
+    )[0, :].reshape(-1, 1)
+    defdom_max = np.loadtxt(
+        snap_bio_path + "%s/%s_DefinitionDomain_MinMax" % (var, var), delimiter=","
+    )[1, :].reshape(-1, 1)
+    defdom_grid = np.loadtxt(
+        snap_bio_path + "%s/%s_DefinitionDomain_Grid" % (var, var), delimiter=","
+    )
+    nn_params[var] = {
+        "norm_minmax": norm_minmax,
+        "denorm_minmax": denorm_minmax,
+        "layer1_weights": layer1_weights,
+        "layer1_bias": layer1_bias,
+        "layer2_weights": layer2_weights,
+        "layer2_bias": layer2_bias,
+        "defdom_min": defdom_min,
+        "defdom_max": defdom_max,
+        "defdom_grid": defdom_grid,
+        "extreme_cases": extreme_cases,
+    }
 
 
 def _normalization(x, x_min, x_max):
