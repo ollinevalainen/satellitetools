@@ -16,8 +16,8 @@ import pandas as pd
 import numpy as np
 import xarray as xr
 from functools import reduce
-from satellitetools.common.classes import AOI
-from satellitetools.common.sentinel2 import (
+from .common.classes import AOI
+from .common.sentinel2 import (
     S2_SCL_CLASSES,
     S2_REFL_TRANS,
     S2_FILTER1,

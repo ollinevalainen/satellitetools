@@ -21,13 +21,13 @@ from collections import Counter
 
 import xmltodict
 from rasterio import MemoryFile
-from satellitetools.common.vector import (
+from .common.vector import (
     transform_crs,
     expand_bounds,
     create_coordinate_arrays,
 )
-from satellitetools.common.raster import mask_raster, resample_raster
-from satellitetools.common.sentinel2 import (
+from .common.raster import mask_raster, resample_raster
+from .common.sentinel2 import (
     S2_SCL_CLASSES,
     S2_REFL_TRANS,
     S2_FILTER1,
