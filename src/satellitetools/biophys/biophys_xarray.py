@@ -9,7 +9,7 @@ Olli's python implementation of ESA SNAP s2toolbox biophysical processor and
 computation of vegetation indices.
 See ATBD at https://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf
 And java source code at
-https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical
+https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical 
 
 Caveats
 Currently changes out of bounds inputs and outputs to nan (or min or max value
@@ -19,9 +19,10 @@ diffferent flags input and output out of bounds).
 Convex hull input checking currently disabled. It's computationally slow and
  not sure of its benefits. Better to filter out bad data based on L2A quality
  info/classification\
-    and hope averaging removes some bad pixels.
-"""
+    and hope averaging removes some bad pixels. 
+"""  # noqa
 import os
+
 import numpy as np
 import xarray as xr
 
@@ -94,10 +95,6 @@ def _denormalization(y_norm, y_min, y_max):
     return y
 
 
-# LAI tests
-# x = np.array([0.057979, 0.0078856, 0.093585, 0.2585, 0.28253, 0.30874, 0.1708, 0.069808, 0.98434, 0.40581, -0.55142]).reshape(-1,1)
-# x1 =   np.array([0.056024,0.012462	,0.088543,	0.41626	,0.49575,	0.51452	,0.14425,	0.043583,	0.99367,	0.90957	,-0.99999]).reshape(-1,1)
-
 # =============================================================================
 # def multidim_intersect(arr1, arr2):
 #     arr1_view = arr1.view([('',arr1.dtype)]*arr1.shape[1])
@@ -119,11 +116,13 @@ def _input_ouf_of_range(x, variable):
     x_bands[:, bad_vector] = np.nan
 
     # convex hull check, currently disabled due to time consumption vs benefit
-    # gridProject = lambda v: np.floor(10 * (v - defdom_min) / (defdom_max - defdom_min) + 1 ).astype(int)
+    # gridProject = lambda v: np.floor(
+    #     10 * (v - defdom_min) / (defdom_max - defdom_min) + 1
+    # ).astype(int)
     # x_bands = gridProject(x_bands)
-    # isInGrid = lambda v: any((v == x).all() for x in nn_params[variable]['defdom_grid'])
+    # isInGrid = lambda v: any((v == x).all() for x in nn_params[variable]["defdom_grid"]) # noqa
     # notInGrid = ~np.array([isInGrid(v) for v in x_bands.T])
-    # x[:,notInGrid | bad_vector] = np.nan
+    # x[:, notInGrid | bad_vector] = np.nan
 
     x_copy[:, bad_vector] = np.nan
     return x_copy

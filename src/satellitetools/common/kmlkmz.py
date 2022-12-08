@@ -6,9 +6,10 @@ Created on Mon Feb 24 09:37:54 2020
 @author:
     Olli Nevalainen (olli.nevalainen@fmi.fi), Finnish Meteorological Institute)
 """
+from zipfile import ZipFile
+
 import geopandas as gpd
 import shapely
-from zipfile import ZipFile
 
 
 def read_kmx_file(kml_or_kmz_file):

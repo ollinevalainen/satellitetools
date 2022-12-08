@@ -6,6 +6,7 @@ Created on Tue Mar 16 11:05:36 2021
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
 import sys
+
 from .common.sentinel2 import S2_FILTER1
 
 

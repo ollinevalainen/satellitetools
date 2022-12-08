@@ -7,11 +7,11 @@ TODO: UPDATE docstrings!!
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021
 """
+import numpy as np
 import rasterio
 from rasterio import mask
 from rasterio.enums import Resampling
 from rasterio.windows import get_data_window
-import numpy as np
 
 
 def mask_raster(raster, aoi_geometry, no_data=0):

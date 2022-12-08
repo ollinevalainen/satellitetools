@@ -9,30 +9,23 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Fri Mar 12 15:47:31 2021
 """
-import sys
-import satsearch
-import rasterio
-import numpy as np
-import pandas as pd
-import xarray as xr
-import urllib
 import datetime
+import urllib
 from collections import Counter
 
+import numpy as np
+import pandas as pd
+import rasterio
+import satsearch
+import xarray as xr
 import xmltodict
 from rasterio import MemoryFile
-from .common.vector import (
-    transform_crs,
-    expand_bounds,
-    create_coordinate_arrays,
-)
+
 from .common.raster import mask_raster, resample_raster
-from .common.sentinel2 import (
-    S2_SCL_CLASSES,
-    S2_REFL_TRANS,
-    S2_FILTER1,
-    filter_s2_qi_dataframe,
-)
+from .common.sentinel2 import (S2_FILTER1, S2_REFL_TRANS, S2_SCL_CLASSES,
+                               filter_s2_qi_dataframe)
+from .common.vector import (create_coordinate_arrays, expand_bounds,
+                            transform_crs)
 
 
 def search_s2_cogs(aoi, req_params):
@@ -57,8 +50,13 @@ def search_s2_cogs(aoi, req_params):
 
 
 def get_xml_metadata(item):
-    with urllib.request.urlopen(item.assets["metadata"]["href"]) as url:
-        metadata = xmltodict.parse(url.read().decode())
+    url = item.assets["metadata"]["href"]
+    if url.startswith("http"):
+        req = urllib.request.Request(url)  # nosec
+    else:
+        raise ValueError from None
+    with urllib.request.urlopen(req) as response:
+        metadata = xmltodict.parse(response.read().decode())
     metadata = metadata.popitem(last=False)[1]
     return metadata
 

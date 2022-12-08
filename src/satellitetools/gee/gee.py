@@ -10,19 +10,17 @@ TODO: Add option for specifying the request spatial resolution.
 
 Created on Thu Feb  6 15:24:12 2020
 """
-import ee
 import datetime
-import pandas as pd
-import numpy as np
-import xarray as xr
 from functools import reduce
+
+import ee
+import numpy as np
+import pandas as pd
+import xarray as xr
+
 from .common.classes import AOI
-from .common.sentinel2 import (
-    S2_SCL_CLASSES,
-    S2_REFL_TRANS,
-    S2_FILTER1,
-    filter_s2_qi_dataframe,
-)
+from .common.sentinel2 import (S2_FILTER1, S2_REFL_TRANS, S2_SCL_CLASSES,
+                               filter_s2_qi_dataframe)
 
 ee.Initialize()
 

@@ -8,15 +8,18 @@ Created on Tue Jun  2 16:30:39 2020
 
 Example of GEE usage
 """
-import satellitetools.gee as gee
-import satellitetools.biophys as biophys
-from satellitetools.common.classes import AOI, RequestParams
-from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
-from satellitetools.common.xrtools import xr_dataset_to_timeseries
-import geopandas as gpd
 import os
 
-#%% Get data
+import geopandas as gpd
+
+import satellitetools.biophys as biophys
+import satellitetools.gee as gee
+from satellitetools.common.classes import AOI, RequestParams
+from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
+from satellitetools.common.wrappers import get_s2_qi_and_data
+from satellitetools.common.xrtools import xr_dataset_to_timeseries
+
+# %% Get data
 
 geomfile = "/Users/olli/python/satellitetools/geometry-files/ruukki_blocks_wgs84.shp"
 
@@ -75,20 +78,19 @@ for aoi in areas:
     aoi.data = biophys.run_snap_biophys(aoi.data, "LAI")
     aoi.data = biophys.run_snap_biophys(aoi.data, "FAPAR")
 
-#%% Compute timeseries from xarrays
+# %% Compute timeseries from xarrays
 timeseries = {}
 timeseries_variables = ["lai", "fapar", "ndvi"]
 for aoi in areas:
     timeseries[aoi.name] = xr_dataset_to_timeseries(aoi.data, timeseries_variables)
 
-#%% save xarrays as netcdf
+# %% save xarrays as netcdf
 out_dir = ""
 for aoi in areas:
     aoi.data.to_netcdf(os.path.join(out_dir, aoi.name + "example_netcdf.nc"))
     # timeseries
 
-#%% Alternative way to retrieve data using the wrapper, works only for single AOI instance
-from satellitetools.common.wrappers import get_s2_qi_and_data
+# %% Alternative way to retrieve data using the wrapper, works only for single AOI instance
 
 aoi = areas[0]
 datasource = "gee"
