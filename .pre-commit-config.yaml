@@ -20,5 +20,6 @@ repos:
         types: [python]
     -   id: isort
         name: isort
-        entry: poetry run isort
+        entry: poetry run isort --profile black
         language: system
+        types: [python]

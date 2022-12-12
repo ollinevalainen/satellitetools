@@ -22,10 +22,13 @@ import xmltodict
 from rasterio import MemoryFile
 
 from .common.raster import mask_raster, resample_raster
-from .common.sentinel2 import (S2_FILTER1, S2_REFL_TRANS, S2_SCL_CLASSES,
-                               filter_s2_qi_dataframe)
-from .common.vector import (create_coordinate_arrays, expand_bounds,
-                            transform_crs)
+from .common.sentinel2 import (
+    S2_FILTER1,
+    S2_REFL_TRANS,
+    S2_SCL_CLASSES,
+    filter_s2_qi_dataframe,
+)
+from .common.vector import create_coordinate_arrays, expand_bounds, transform_crs
 
 
 def search_s2_cogs(aoi, req_params):
@@ -51,14 +54,11 @@ def search_s2_cogs(aoi, req_params):
 
 def get_xml_metadata(item):
     url = item.assets["metadata"]["href"]
-    if url.startswith("http"):
-        req = urllib.request.Request(url)  # nosec
-    else:
-        raise ValueError from None
+    req = urllib.request.Request(url)
     with urllib.request.urlopen(req) as response:
         metadata = xmltodict.parse(response.read().decode())
-    metadata = metadata.popitem(last=False)[1]
-    return metadata
+        metadata = metadata.popitem(last=False)[1]
+    return metadata  # nosec
 
 
 def get_angles(item):

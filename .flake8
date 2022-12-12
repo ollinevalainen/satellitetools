@@ -1,7 +1,8 @@
 # .flake8
 [flake8]
 select = BLK,C,E,F,W,B,B9,S
-ignore = E203,W503,E501
+# S310 ignored due to aws_cog.py get_xml_metadata and "# nosec" flag not working
+ignore = E203,W503,E501, S310
 max-line-length = 88
 per-file-ignores = tests/*:S101
 

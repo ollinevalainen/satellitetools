@@ -19,8 +19,12 @@ import pandas as pd
 import xarray as xr
 
 from .common.classes import AOI
-from .common.sentinel2 import (S2_FILTER1, S2_REFL_TRANS, S2_SCL_CLASSES,
-                               filter_s2_qi_dataframe)
+from .common.sentinel2 import (
+    S2_FILTER1,
+    S2_REFL_TRANS,
+    S2_SCL_CLASSES,
+    filter_s2_qi_dataframe,
+)
 
 ee.Initialize()
 
@@ -414,9 +418,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
 
     # transform 2D data to arrays
     for b in bands:
-
         dataframe[b] = dataframe.apply(
-            lambda row: s2_lists_to_array(
+            lambda row, b=b: s2_lists_to_array(
                 row["x_coords"],
                 row["y_coords"],
                 row[b],
