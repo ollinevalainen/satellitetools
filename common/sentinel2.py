@@ -81,14 +81,14 @@ S2_BANDS_10_20_COG = [
 ]
 
 S2_BANDS_AWS_TO_GEE = {aws: gee for aws, gee in zip(S2_BANDS_COG, S2_BANDS_GEE)}
-S2_BANDS_10_20_AWS_TO_GEE = {
-    aws: gee for aws, gee in zip(S2_BANDS_10_20_COG, S2_BANDS_10_20_GEE)
-}
+# S2_BANDS_10_20_AWS_TO_GEE = {
+#     aws: gee for aws, gee in zip(S2_BANDS_10_20_COG, S2_BANDS_10_20_GEE)
+# }
 
-S2_BANDS_GEE_TO_AWS = {gee: aws for gee, aws in zip(S2_BANDS_COG, S2_BANDS_GEE)}
-S2_BANDS_10_20_GEE_TO_AWS = {
-    gee: aws for gee, aws in zip(S2_BANDS_10_20_GEE, S2_BANDS_10_20_COG)
-}
+S2_BANDS_GEE_TO_AWS = {gee: aws for gee, aws in zip(S2_BANDS_GEE, S2_BANDS_COG)}
+# S2_BANDS_10_20_GEE_TO_AWS = {
+#     gee: aws for gee, aws in zip(S2_BANDS_10_20_GEE, S2_BANDS_10_20_COG)
+# }
 
 s2_qi_labels = [
     "NODATA",
