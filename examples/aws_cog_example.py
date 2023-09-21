@@ -31,10 +31,12 @@ crs = ruukki_block1.crs.to_string()
 
 aoi = AOI(aoi_name, geom, crs)
 req_params = RequestParams(
-    "2020-06-01", "2020-06-10", "aws_cog", bands=S2_BANDS_10_20_COG, target_gsd=10.0
+    "2023-06-01", "2023-06-10", "aws_cog", bands=S2_BANDS_10_20_COG, target_gsd=10.0
 )
 # %%
 items = aws_cog.search_s2_cogs(aoi, req_params)
+
+# %%
 qi_df = aws_cog.cog_get_s2_quality_info(aoi, req_params, items)
 dataset = aws_cog.cog_get_s2_band_data(aoi, req_params, items, qi_df)
 

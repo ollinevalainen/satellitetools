@@ -27,6 +27,7 @@ from satellitetools.common.sentinel2 import (
 ee.Initialize()
 
 NO_DATA = -99999
+GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
 GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
@@ -403,6 +404,9 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
     consistent_data = reduce(lambda a, b: a & b, datalengths)
     dataframe = dataframe[consistent_data]
 
+    if dataframe.empty:
+        print("No consistent data available.")
+        return None
     #  2D data
     bands = request_params.bands
 

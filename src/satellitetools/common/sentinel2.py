@@ -8,25 +8,91 @@ Created on Tue Mar 16 10:53:15 2021
 
 S2_REFL_TRANS = 10000
 
-S2_BANDS_COG = [
-    "B01",
-    "B02",
-    "B03",
-    "B04",
-    "B05",
-    "B06",
-    "B07",
-    "B08",
+S2_BANDS_GEE = [
+    "B1",
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8",
     "B8A",
-    "B09",
+    "B9",
     "B11",
     "B12",
 ]
-# 10-20 m bands
-S2_BANDS_10_20_COG = ["B02", "B03", "B04", "B05", "B06", "B07", "B8A", "B11", "B12"]
+S2_BANDS_10_20_GEE = [
+    "B2",
+    "B3",
+    "B4",
+    "B5",
+    "B6",
+    "B7",
+    "B8A",
+    "B11",
+    "B12",
+]
+# Old v0 earth search
 
-S2_BANDS_GEE = [b.replace("B0", "B") for b in S2_BANDS_COG]
-S2_BANDS_10_20_GEE = [b.replace("B0", "B") for b in S2_BANDS_10_20_COG]
+
+# S2_BANDS_COG = [
+#     "B01",
+#     "B02",
+#     "B03",
+#     "B04",
+#     "B05",
+#     "B06",
+#     "B07",
+#     "B08",
+#     "B8A",
+#     "B09",
+#     "B11",
+#     "B12",
+# ]
+
+# # 10-20 m bands
+# S2_BANDS_10_20_COG = ["B02", "B03", "B04", "B05", "B06", "B07", "B8A", "B11", "B12"]
+
+S2_BANDS_COG = [
+    "coastal",  # B1
+    "blue",  # B2
+    "green",  # B3
+    "red",  # B4
+    "rededge1",  # B5
+    "rededge2",  # B6
+    "rededge3",  # B7
+    "nir",  # B8
+    "nir08",  # B8A
+    "nir09",  # B9
+    "swir16",  # B11
+    "swir22",  # B12
+]
+S2_BANDS_10_20_COG = [
+    "blue",
+    "green",
+    "red",
+    "rededge1",
+    "rededge2",
+    "rededge3",
+    "nir08",
+    "swir16",
+    "swir22",
+]
+
+S2_BANDS_AWS_TO_GEE = {
+    aws: gee for aws, gee in zip(S2_BANDS_COG, S2_BANDS_GEE, strict=True)
+}
+# S2_BANDS_10_20_AWS_TO_GEE = {
+#     aws: gee for aws, gee in zip(S2_BANDS_10_20_COG, S2_BANDS_10_20_GEE)
+# }
+
+S2_BANDS_GEE_TO_AWS = {
+    gee: aws for gee, aws in zip(S2_BANDS_GEE, S2_BANDS_COG, strict=True)
+}
+# S2_BANDS_10_20_GEE_TO_AWS = {
+#     gee: aws for gee, aws in zip(S2_BANDS_10_20_GEE, S2_BANDS_10_20_COG)
+# }
 
 s2_qi_labels = [
     "NODATA",

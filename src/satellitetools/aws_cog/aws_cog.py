@@ -23,6 +23,7 @@ from rasterio import MemoryFile
 
 from satellitetools.common.raster import mask_raster, resample_raster
 from satellitetools.common.sentinel2 import (
+    S2_BANDS_AWS_TO_GEE,
     S2_FILTER1,
     S2_REFL_TRANS,
     S2_SCL_CLASSES,
@@ -34,6 +35,13 @@ from satellitetools.common.vector import (
     transform_crs,
 )
 
+# Documentation for options at:
+# https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
+EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
+DEFAULT_REQUEST_LIMIT = 1000
+
+AWS_SCL_BAND = "scl"
+
 
 def search_s2_cogs(aoi, req_params):
     print(
@@ -41,11 +49,21 @@ def search_s2_cogs(aoi, req_params):
             req_params.datestart, req_params.dateend, aoi.name
         )
     )
+    # Options
     bbox = list(aoi.geometry.bounds)
-    dates = "{}/{}".format(req_params.datestart, req_params.dateend)
-    URL = "https://earth-search.aws.element84.com/v0"
+    dates = "{}/{}".format(
+        pd.to_datetime(req_params.datestart).isoformat() + "Z",
+        pd.to_datetime(req_params.dateend).isoformat() + "Z",
+    )
+    limit = DEFAULT_REQUEST_LIMIT
+
+    # Search
     search = satsearch.Search(
-        url=URL, collections=["sentinel-s2-l2a-cogs"], datetime=dates, bbox=bbox
+        url=EARTH_SEARCH_ENDPOINT,
+        collections=["sentinel-2-l2a"],
+        datetime=dates,
+        bbox=bbox,
+        limit=limit,
     )
     if search.found() == 0:
         print("No available data for specified time!")
@@ -57,12 +75,10 @@ def search_s2_cogs(aoi, req_params):
 
 
 def get_xml_metadata(item):
-    url = item.assets["metadata"]["href"]
-    req = urllib.request.Request(url)
-    with urllib.request.urlopen(req) as response:
-        metadata = xmltodict.parse(response.read().decode())
-        metadata = metadata.popitem()[1]
-    return metadata  # nosec
+    with urllib.request.urlopen(item.assets["granule_metadata"]["href"]) as url:
+        metadata = xmltodict.parse(url.read().decode())
+    metadata = metadata.popitem(last=False)[1]
+    return metadata
 
 
 def get_angles(item):
@@ -104,9 +120,9 @@ def cog_get_s2_scl_data(aoi, item):
     bbox_cog_crs = list(aoi_geometry_cog_crs.bounds)
 
     # Scene Classification Band
-    band = "SCL"
+    band = AWS_SCL_BAND
     # Transform aoi to pixel coordinates/window
-    cog_transform = rasterio.transform.Affine(*item.assets[band]["proj:transform"][:-3])
+    cog_transform = rasterio.transform.Affine(*item.assets[band]["proj:transform"])
     window = rasterio.windows.from_bounds(*bbox_cog_crs, cog_transform).round_offsets()
 
     # Get windowed data
@@ -144,28 +160,26 @@ def cog_get_s2_scl_data(aoi, item):
 
 
 def cog_generate_qi_dict(aoi, item, scl_data):
-
+    s2_product_id = item.properties["s2:product_uri"].replace(".SAFE", "")
     date = pd.to_datetime(
-        datetime.datetime.strptime(
-            item.properties["sentinel:product_id"].split("_")[2], "%Y%m%dT%H%M%S"
-        )
+        datetime.datetime.strptime(s2_product_id.split("_")[2], "%Y%m%dT%H%M%S")
     )
     projection = {
         "type": "Projection",
         "crs": "EPSG:{}".format(item.properties["proj:epsg"]),
-        "transform": item.assets["SCL"]["proj:transform"][:-3],
+        "transform": item.assets[AWS_SCL_BAND]["proj:transform"],
     }
 
     qi_dict = {
         "Date": date,
         "name": aoi.name,
         "tileid": "{}{}{}".format(
-            item.properties["sentinel:utm_zone"],
-            item.properties["sentinel:latitude_band"],
-            item.properties["sentinel:grid_square"],
+            item.properties["mgrs:utm_zone"],
+            item.properties["mgrs:latitude_band"],
+            item.properties["mgrs:grid_square"],
         ),
         "assetid": item.id,
-        "productid": item.properties["sentinel:product_id"],
+        "productid": s2_product_id,
         "projection": projection,
         "datasource": "aws_cog",
     }
@@ -173,7 +187,6 @@ def cog_generate_qi_dict(aoi, item, scl_data):
     # number of pixels inside aoi, excludes out-of-aoi pixels
     num_of_aoi_pixels = np.sum(scl_data != 99)
     for i, scl_class in enumerate(S2_SCL_CLASSES):
-
         class_percentage = np.sum(scl_data == i) / num_of_aoi_pixels
 
         qi_dict.update({scl_class: class_percentage})
@@ -182,7 +195,6 @@ def cog_generate_qi_dict(aoi, item, scl_data):
 
 
 def cog_get_s2_quality_info(aoi, req_params, items):
-
     qi_df = pd.DataFrame()
     for item in items:
         # print("Retrieving QI for item {}...".format(item.id))
@@ -199,21 +211,20 @@ def cog_get_s2_quality_info(aoi, req_params, items):
 
 
 def cog_create_data_dict(aoi, item):
+    s2_product_id = item.properties["s2:product_uri"].replace(".SAFE", "")
     date = pd.to_datetime(
-        datetime.datetime.strptime(
-            item.properties["sentinel:product_id"].split("_")[2], "%Y%m%dT%H%M%S"
-        )
+        datetime.datetime.strptime(s2_product_id.split("_")[2], "%Y%m%dT%H%M%S")
     )
     data_dict = {
         "Date": date,
         "name": aoi.name,
         "tileid": "{}{}{}".format(
-            item.properties["sentinel:utm_zone"],
-            item.properties["sentinel:latitude_band"],
-            item.properties["sentinel:grid_square"],
+            item.properties["mgrs:utm_zone"],
+            item.properties["mgrs:latitude_band"],
+            item.properties["mgrs:grid_square"],
         ),
         "assetid": item.id,
-        "productid": item.properties["sentinel:product_id"],
+        "productid": s2_product_id,
         "projection": "EPSG:{}".format(item.properties["proj:epsg"]),
     }
     return data_dict
@@ -227,7 +238,6 @@ def cog_get_s2_band_data(
     qi_threshold=0.02,
     qi_filter=S2_FILTER1,
 ):
-
     filtered_qi = filter_s2_qi_dataframe(qi_dataframe, qi_threshold, qi_filter)
     if len(filtered_qi) == 0:
         print("No data to be retrieved for area %s !" % aoi.name)
@@ -266,9 +276,9 @@ def cog_get_s2_band_data(
         bbox_cog_crs = expand_bounds(bbox_cog_crs, 80)
 
         # currently always includes "SCL" data
-        for band in req_params.bands + ["SCL"]:
+        for band in req_params.bands + [AWS_SCL_BAND]:
             cog_transform = rasterio.transform.Affine(
-                *item.assets[band]["proj:transform"][:-3]
+                *item.assets[band]["proj:transform"]
             )
             window = rasterio.windows.from_bounds(
                 *bbox_cog_crs, cog_transform
@@ -278,7 +288,7 @@ def cog_get_s2_band_data(
             # loop trough bands (file_url) here
             with rasterio.open(file_url) as src:
                 kwds = src.profile
-                if band == "SCL":
+                if band == AWS_SCL_BAND:
                     raster_data = src.read(1, window=window, boundless=True)
                 else:
                     raster_data = (
@@ -317,7 +327,7 @@ def cog_get_s2_band_data(
                 with memfile.open(**new_kwds) as dataset:
                     dataset.write(data)
 
-                if band == "SCL":
+                if band == AWS_SCL_BAND:
                     no_data = 99
                 else:
                     no_data = np.nan
@@ -339,14 +349,12 @@ def cog_get_s2_band_data(
 
 
 def check_shapes(dataframe, bands):
-
     # band to band comparison
     dataframe_cp = dataframe.copy()
     drop_these = []
     for image in dataframe_cp.itertuples(index=True):
         for band in bands[1:]:
             if getattr(image, bands[0]).shape != getattr(image, band).shape:
-
                 print(
                     """Shape of bands doesn't match for image {} """.format(
                         image.productid
@@ -366,7 +374,6 @@ def check_shapes(dataframe, bands):
     drop_these = []
     # image to image comparison
     for image in dataframe_cp.itertuples(index=True):
-
         if getattr(image, bands[0]).shape != most_common_shape:
             print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
             print("Most common shape = {}".format(most_common_shape))
@@ -420,13 +427,15 @@ def cog_s2_data_to_xarray(aoi, req_params, dataframe):
 
     aoi_pixels = np.size(narray[0, 0, :, :]) - np.sum(np.isnan(narray[0, 0, :, :]))
 
-    scl_array = np.stack(dataframe["SCL"].values, axis=2).transpose().astype(np.int16)
+    scl_array = (
+        np.stack(dataframe[AWS_SCL_BAND].values, axis=2).transpose().astype(np.int16)
+    )
 
+    #  switch to be consistent with gee
+    band_ids = [S2_BANDS_AWS_TO_GEE[b] for b in bands]
     coords = {
         "time": dataframe["Date"].values.astype(np.datetime64),
-        "band": [
-            b.replace("B0", "B") for b in bands
-        ],  # switch to be consistent with gee
+        "band": band_ids,
         "y": y_coords_center,
         "x": x_coords_center,
     }
