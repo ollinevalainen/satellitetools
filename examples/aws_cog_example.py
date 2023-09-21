@@ -6,20 +6,25 @@ Created on Fri Mar 12 16:20:30 2021
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
 
+# %%
+import os
 import time
 
 import geopandas as gpd
 
-# %%
-import satellitetools.aws_cog as aws_cog
-import satellitetools.biophys as biophys
+import satellitetools.aws_cog.aws_cog as aws_cog
+import satellitetools.biophys.biophys as biophys
 from satellitetools.common.classes import AOI, RequestParams
 from satellitetools.common.sentinel2 import S2_BANDS_10_20_COG
 from satellitetools.common.wrappers import get_s2_qi_and_data
 
 start_time = time.time()
-ruukki_df = gpd.read_file("./satellitetools/geometry-files/ruukki_blocks_wgs84.shp")
-ruukki_block1 = ruukki_df.loc[[0]]
+package_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
+# should also work with geojson and kml/kmz
+geomfile = os.path.join(package_dir, "geometry-files/ruukki_blocks_wgs84.shp")
+gdf = gpd.read_file(geomfile)
+
+ruukki_block1 = gdf.loc[[0]]
 aoi_name = ruukki_block1.iloc[0].Name.replace(" ", "").lower()
 geom = ruukki_block1.iloc[0].geometry
 crs = ruukki_block1.crs.to_string()
@@ -56,3 +61,5 @@ aoi.qi, aoi.data = get_s2_qi_and_data(aoi, request, qi_threshold=qi_threshold)
 # %% Test biohys
 
 aoi.data = biophys.run_snap_biophys(aoi.data, "LAI")
+
+# %%

@@ -12,7 +12,7 @@ from satellitetools.common.sentinel2 import S2_FILTER1
 
 def get_s2_qi_and_data(aoi, req_params, qi_threshold=None, qi_filter=S2_FILTER1):
     if req_params.datasource == "gee":
-        import satellitetools.gee as gee
+        import satellitetools.gee.gee as gee
 
         print("Computing S2 quality information...")
         qi_df_dict = gee.ee_get_s2_quality_info(aoi, req_params)
@@ -35,7 +35,7 @@ def get_s2_qi_and_data(aoi, req_params, qi_threshold=None, qi_filter=S2_FILTER1)
                 dataset = dataset_dict[aoi.name]
 
     elif req_params.datasource == "aws_cog":
-        import satellitetools.aws_cog as aws_cog
+        import satellitetools.aws_cog.aws_cog as aws_cog
 
         items = aws_cog.search_s2_cogs(aoi, req_params)
         if items is None:

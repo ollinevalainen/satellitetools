@@ -3,8 +3,6 @@
 """
 Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
 
-TODO: Add option for specifying the request spatial resolution.
-
 @author: Olli Nevalainen (olli.nevalainen@fmi.fi),
  Finnish Meteorological Institute)
 
