@@ -18,8 +18,8 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .common.classes import AOI
-from .common.sentinel2 import (
+from satellitetools.common.classes import AOI
+from satellitetools.common.sentinel2 import (
     S2_FILTER1,
     S2_REFL_TRANS,
     S2_SCL_CLASSES,
@@ -29,6 +29,8 @@ from .common.sentinel2 import (
 ee.Initialize()
 
 NO_DATA = -99999
+
+GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
 
 def ee_get_s2_quality_info(AOIs, req_params):
@@ -67,7 +69,7 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
         area = feature.geometry()
         image_collection = (
-            ee.ImageCollection("COPERNICUS/S2_SR")
+            ee.ImageCollection(GEE_DATASET)
             .filterBounds(area)
             .filterDate(req_params.datestart, req_params.dateend)
             .select(["SCL"])
@@ -142,7 +144,12 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
 
 def ee_get_s2_data(
-    AOIs, req_params, qi_dataframes, qi_threshold=0, qi_filter=S2_FILTER1
+    AOIs,
+    req_params,
+    qi_dataframes,
+    qi_threshold=0,
+    qi_filter=S2_FILTER1,
+    use_harmonized=False,
 ):
     """Get S2 data (level L2A, bottom of atmosphere data) from GEE.
 
@@ -186,6 +193,7 @@ def ee_get_s2_data(
     dateend = req_params.dateend
     bands = req_params.bands
     resolution = req_params.target_gsd
+
     # if single AOI instance, make a list
     if isinstance(AOIs, AOI):
         AOIs = list([AOIs])
@@ -209,7 +217,7 @@ def ee_get_s2_data(
             print("No qualified observations with used tile")
             continue
 
-        full_assetids = "COPERNICUS/S2_SR/" + filtered_qi["assetid"]
+        full_assetids = GEE_DATASET + "/" + filtered_qi["assetid"]
         image_list = [ee.Image(asset_id) for asset_id in full_assetids]
         crs = filtered_qi["projection"].values[0]["crs"]
         feature = ee.Feature(

@@ -11,7 +11,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .biophys import SNAP_BIO_RMSE
+from satellitetools.biophys import SNAP_BIO_RMSE
 
 
 def xr_dataset_to_timeseries(

@@ -9,7 +9,7 @@ Created on Tue Mar 16 10:45:05 2021
 """
 import sys
 
-from .common.sentinel2 import S2_BANDS_COG, S2_BANDS_GEE
+from satellitetools.common.sentinel2 import S2_BANDS_COG, S2_BANDS_GEE
 
 
 class RequestParams:

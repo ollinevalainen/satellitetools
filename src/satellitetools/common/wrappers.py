@@ -7,7 +7,7 @@ Created on Tue Mar 16 11:05:36 2021
 """
 import sys
 
-from .common.sentinel2 import S2_FILTER1
+from satellitetools.common.sentinel2 import S2_FILTER1
 
 
 def get_s2_qi_and_data(aoi, req_params, qi_threshold=None, qi_filter=S2_FILTER1):
