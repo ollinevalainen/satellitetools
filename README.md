@@ -1,7 +1,7 @@
 [![DOI](https://zenodo.org/badge/270676132.svg)](https://zenodo.org/badge/latestdoi/270676132)
 
 # satellitetools
-This package is at the moment under constant development and use in our research projects at FMI (Finnish Meteorological Institute). Currently developed and used in agricultural study areas. Sorry for lack of documentation at the moment. We are currently preparing scientific papers where this package is used. Please feel free to contact me in case you want more information about this package.
+This package is at the moment under constant development and use in our research projects at FMI (Finnish Meteorological Institute). Currently developed and used in agricultural study areas. Sorry for lack of documentation at the moment. Please feel free to contact me in case you want more information about this package.
 
 This package has currently tools for getting Sentinel-2 data from Google Earth Engine (GEE) or alternatively from AWS Open Data registry where Setinel-2 data (Level-2A) data is available as cloud-optimized geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/). There's also my python implementation of ESA's SNAP Biophysical processor which can be used to compute biophysical parameters, such as LAI (Original Java code in SNAP here: https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical). ATBD: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
 
@@ -12,23 +12,15 @@ See examples/gee_example.py and examples/aws_cog examples for simple usage.
 * The biophysical processor implementation in this package does not currently use the convex hull check (see the Java code and ATBD) and does not have as extensive input/output validity flagging as the original version in SNAP.
 
 **TODO**:
-* Add option for specifying the request spatial resolution for GEE process. Already implemented for aws_cog process
 * Proper testing
 * Point-based AOI (currently AOI must be a polygon)
 * ...
 
-Old codes include old version of gee. Stored because it had some Landsat-8 processing that is not yet implemented in new gee.py.
+**Installation**
 
-**Dependencies** (non-standard packages, might still miss something...):
-* earthengine-api (and a google account, remember to check GEE license terms)
-* geopandas
-* pandas
-* numpy
-* xarray
-* scipy
-* sat-search (aws_cog only, https://github.com/sat-utils/sat-search)
-* xlmtodict (aws_cog only)
-* rasterio (aws_cog only)
+```console
+pip install git+https://github.com/ollinevalainen/satellitetools.git@develop-poetry
+```
 
 
 **Some explanation of the satellite data filtering process used:**
