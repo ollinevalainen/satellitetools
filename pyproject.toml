@@ -9,7 +9,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 pandas = "^1.0.2"
-sat-search = "^0.3.0"
 numpy = "^1.23.5"
 geopandas = "^0.12.1"
 earthengine-api = "^0.1.334"
@@ -17,6 +16,7 @@ xarray = "^2022.12.0"
 scipy = "^1.9.3"
 xmltodict = "^0.13.0"
 rasterio = "^1.3.4"
+pystac-client = "^0.7.5"
 
 [tool.poetry.group.dev.dependencies]
 mypy = "^0.991"

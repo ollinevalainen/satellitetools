@@ -16,9 +16,9 @@ from collections import Counter
 import numpy as np
 import pandas as pd
 import rasterio
-import satsearch
 import xarray as xr
 import xmltodict
+from pystac_client import Client
 from rasterio import MemoryFile
 
 from satellitetools.common.raster import mask_raster, resample_raster
@@ -58,26 +58,26 @@ def search_s2_cogs(aoi, req_params):
     limit = DEFAULT_REQUEST_LIMIT
 
     # Search
-    search = satsearch.Search(
-        url=EARTH_SEARCH_ENDPOINT,
+    client = Client.open(EARTH_SEARCH_ENDPOINT)
+    search = client.search(
         collections=["sentinel-2-l2a"],
         datetime=dates,
         bbox=bbox,
         limit=limit,
     )
-    if search.found() == 0:
+    if search.matched() == 0:
         print("No available data for specified time!")
         items = None
     else:
-        items = search.items()
-        print("Found {} available S2 acquisition dates.".format(len(items)))
+        items = search.item_collection()
+        print("Found {} available S2 acquisition dates.".format(search.matched()))
     return items
 
 
 def get_xml_metadata(item):
-    with urllib.request.urlopen(item.assets["granule_metadata"]["href"]) as url:
+    with urllib.request.urlopen(item.assets["granule_metadata"].href) as url:
         metadata = xmltodict.parse(url.read().decode())
-    metadata = metadata.popitem(last=False)[1]
+    metadata = metadata.popitem()[1]
     return metadata
 
 
@@ -122,11 +122,13 @@ def cog_get_s2_scl_data(aoi, item):
     # Scene Classification Band
     band = AWS_SCL_BAND
     # Transform aoi to pixel coordinates/window
-    cog_transform = rasterio.transform.Affine(*item.assets[band]["proj:transform"])
+    cog_transform = rasterio.transform.Affine(
+        *item.assets[band].extra_fields["proj:transform"]
+    )
     window = rasterio.windows.from_bounds(*bbox_cog_crs, cog_transform).round_offsets()
 
     # Get windowed data
-    file_url = item.assets[band]["href"]
+    file_url = item.assets[band].href
     # loop trough bands (file_url) here
     with rasterio.open(file_url) as src:
         kwds = src.profile
@@ -167,7 +169,7 @@ def cog_generate_qi_dict(aoi, item, scl_data):
     projection = {
         "type": "Projection",
         "crs": "EPSG:{}".format(item.properties["proj:epsg"]),
-        "transform": item.assets[AWS_SCL_BAND]["proj:transform"],
+        "transform": item.assets[AWS_SCL_BAND].extra_fields["proj:transform"],
     }
 
     qi_dict = {
@@ -278,13 +280,13 @@ def cog_get_s2_band_data(
         # currently always includes "SCL" data
         for band in req_params.bands + [AWS_SCL_BAND]:
             cog_transform = rasterio.transform.Affine(
-                *item.assets[band]["proj:transform"]
+                *item.assets[band].extra_fields["proj:transform"]
             )
             window = rasterio.windows.from_bounds(
                 *bbox_cog_crs, cog_transform
             ).round_offsets()
 
-            file_url = item.assets[band]["href"]
+            file_url = item.assets[band].href
             # loop trough bands (file_url) here
             with rasterio.open(file_url) as src:
                 kwds = src.profile

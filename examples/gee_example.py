@@ -33,7 +33,10 @@ qi_threshold = 0.02
 # the example geometry file has eight different polygons
 gdf = gpd.read_file(geomfile)
 
-request = RequestParams(datestart, dateend, datasource="gee", bands=S2_BANDS_10_20_GEE)
+# target_gsd = resolution to fetch (if 10 m then 20 m bands are resampled to 10 m)
+request = RequestParams(
+    datestart, dateend, datasource="gee", bands=S2_BANDS_10_20_GEE, target_gsd=10
+)
 
 
 areas = []
@@ -43,6 +46,8 @@ for block in gdf.itertuples(index=True, name="Block"):
 
 print("Computing S2 quality information...")
 qi_df_dict = gee.ee_get_s2_quality_info(areas, request)
+
+
 print("Retrieving S2 data...")
 data_dict = gee.ee_get_s2_data(areas, request, qi_df_dict, qi_threshold=qi_threshold)
 for aoi in areas:
