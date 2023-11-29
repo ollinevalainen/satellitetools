@@ -72,7 +72,7 @@ def xr_dataset_to_timeseries(
             # 20 = 20 m which is the SNAP_BIO function standard resolution
             resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
             pixel_multiplier = (
-                resampling_ratio ** 2
+                resampling_ratio**2
             )  # doubling resolution quadruples amount of pixels etc.
             if resampling_ratio > 1:
                 sample_n = sample_n / pixel_multiplier
@@ -118,12 +118,11 @@ def compute_uncertainty(df, var):
 
 
 def propagate_rmse(n, rmse):
-    propagated_rmse = np.sqrt(np.sum([rmse ** 2] * int(n))) / n
+    propagated_rmse = np.sqrt(np.sum([rmse**2] * int(n))) / n
     return propagated_rmse
 
 
 def compute_uncertainty_v2(df, xr_dataset, var):
-
     if var in SNAP_BIO_RMSE.keys():
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
@@ -134,7 +133,7 @@ def compute_uncertainty_v2(df, xr_dataset, var):
             # 20 = 20 m which is the SNAP_BIO function standard resolution
             resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
             pixel_multiplier = (
-                resampling_ratio ** 2
+                resampling_ratio**2
             )  # doubling resolution quadruples amount of pixels etc.
             if resampling_ratio > 1:
                 sample_n = sample_n / pixel_multiplier
@@ -162,16 +161,15 @@ def compute_uncertainty_v2(df, xr_dataset, var):
         # if resampling_ratio > 1:
         #     rmse_mean = rmse_mean * pixel_multiplier / np.sqrt(pixel_multiplier)
 
-        df[var + "_uncertainty"] = np.sqrt(df[var + "_se"] ** 2 + rmse_mean ** 2)
+        df[var + "_uncertainty"] = np.sqrt(df[var + "_std"] ** 2 + rmse_mean**2)
 
     else:
-        df[var + "_uncertainty"] = df[var + "_se"]
+        df[var + "_uncertainty"] = df[var + "_std"]
 
     return df
 
 
 def compute_confidence_intervals(df, var, confidence_level="95"):
-
     if confidence_level == "90":
         z_score = 1.645
         ci_min = "_F005"
