@@ -70,7 +70,15 @@ def xr_dataset_to_timeseries(
         if var in SNAP_BIO_RMSE.keys():
             # if data is upsampled, take this into account in uncertainty (n "artificially increased")
             # 20 = 20 m which is the SNAP_BIO function standard resolution
-            resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            try:
+                resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            except IndexError:
+                try:
+                    resampling_ratio = 20 / np.abs(xr_dataset.y[1] - xr_dataset.y[0])
+                except IndexError:
+                    # Print assumes that the data is not resampled
+                    resampling_ratio = 1
+
             pixel_multiplier = (
                 resampling_ratio**2
             )  # doubling resolution quadruples amount of pixels etc.
@@ -131,7 +139,15 @@ def compute_uncertainty_v2(df, xr_dataset, var):
         if var in SNAP_BIO_RMSE.keys():
             # if data is upsampled, take this into account in uncertainty (n "artificially increased")
             # 20 = 20 m which is the SNAP_BIO function standard resolution
-            resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            try:
+                resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
+            except IndexError:
+                try:
+                    resampling_ratio = 20 / np.abs(xr_dataset.y[1] - xr_dataset.y[0])
+                except IndexError:
+                    # Print assumes that the data is not resampled
+                    resampling_ratio = 1
+
             pixel_multiplier = (
                 resampling_ratio**2
             )  # doubling resolution quadruples amount of pixels etc.
