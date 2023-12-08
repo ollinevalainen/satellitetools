@@ -197,13 +197,14 @@ def cog_generate_qi_dict(aoi, item, scl_data):
 
 
 def cog_get_s2_quality_info(aoi, req_params, items):
-    qi_df = pd.DataFrame()
+    qi_dfs = []
     for item in items:
         # print("Retrieving QI for item {}...".format(item.id))
         scl_dict = cog_get_s2_scl_data(aoi, item)
         qi_dict = cog_generate_qi_dict(aoi, item, scl_dict["data"])
-        qi_df = qi_df.append(qi_dict, ignore_index=True)
+        qi_dfs.append(pd.DataFrame(qi_dict))
 
+    qi_df = pd.concat(qi_dfs, ignore_index=True)
     qi_df = qi_df.sort_values("Date").reset_index(drop=True)
     # Move "Date" to first columns
     cols = list(qi_df)
@@ -257,8 +258,8 @@ def cog_get_s2_band_data(
         return None
     print("{} good observations available. Retrieving data...".format(len(filtered_qi)))
 
-    # Dataframe to collect all data
-    data_df = pd.DataFrame()
+    # List to collect all dataframes
+    data_dfs = []
 
     for item in items:
         if item.id not in filtered_qi["assetid"].values.tolist():
@@ -342,7 +343,9 @@ def cog_get_s2_band_data(
 
         angles_dict = get_angles(item)
         data_dict.update(angles_dict)
-        data_df = data_df.append(data_dict, ignore_index=True)
+        data_dfs.append(pd.DataFrame(data_dict))
+
+    data_df = pd.concat(data_dfs, ignore_index=True)
     data_df = data_df.sort_values("Date").reset_index(drop=True)
 
     # Transform to xarray dataset
