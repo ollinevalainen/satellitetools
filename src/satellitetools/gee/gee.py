@@ -524,3 +524,31 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
         arr[y_idx, x_idx] = data
     arr = np.flipud(arr)
     return arr
+
+
+def get_copernicus_dem_elevation(lat: float, lon: float):
+    """Get elevation from Copernicus DEM.
+
+    Parameters
+    ----------
+    lat : float
+        Latitude.
+    lon : float
+        Longitude.
+
+    Returns
+    -------
+    elevation : float
+        Elevation.
+    """
+
+    point = ee.Geometry.Point(lon, lat)
+    dataset = (
+        ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM").filterBounds(point)
+    )
+
+    # returns list of two lists where first list is headers and the second are data
+    point_data: list = dataset.getRegion(point, 30).getInfo()
+    for key, value in zip(point_data[0], point_data[1], strict=True):
+        if key == "DEM":
+            return value
