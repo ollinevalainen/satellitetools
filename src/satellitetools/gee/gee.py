@@ -3,8 +3,6 @@
 """
 Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
 
-TODO: Add option for specifying the request spatial resolution.
-
 @author: Olli Nevalainen (olli.nevalainen@fmi.fi),
  Finnish Meteorological Institute)
 
@@ -17,6 +15,7 @@ import ee
 import numpy as np
 import pandas as pd
 import xarray as xr
+
 from satellitetools.common.classes import AOI
 from satellitetools.common.sentinel2 import (
     S2_FILTER1,
@@ -28,6 +27,8 @@ from satellitetools.common.sentinel2 import (
 ee.Initialize()
 
 NO_DATA = -99999
+GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
+
 GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
 
@@ -142,7 +143,12 @@ def ee_get_s2_quality_info(AOIs, req_params):
 
 
 def ee_get_s2_data(
-    AOIs, req_params, qi_dataframes, qi_threshold=0, qi_filter=S2_FILTER1
+    AOIs,
+    req_params,
+    qi_dataframes,
+    qi_threshold=0,
+    qi_filter=S2_FILTER1,
+    use_harmonized=False,
 ):
     """Get S2 data (level L2A, bottom of atmosphere data) from GEE.
 
@@ -186,6 +192,7 @@ def ee_get_s2_data(
     dateend = req_params.dateend
     bands = req_params.bands
     resolution = req_params.target_gsd
+
     # if single AOI instance, make a list
     if isinstance(AOIs, AOI):
         AOIs = list([AOIs])
@@ -421,9 +428,8 @@ def s2_data_to_xarray(aoi, request_params, dataframe, convert_to_reflectance=Tru
 
     # transform 2D data to arrays
     for b in bands:
-
         dataframe[b] = dataframe.apply(
-            lambda row: s2_lists_to_array(
+            lambda row, b=b: s2_lists_to_array(
                 row["x_coords"],
                 row["y_coords"],
                 row[b],
@@ -518,3 +524,31 @@ def s2_lists_to_array(x_coords, y_coords, data, convert_to_reflectance=True):
         arr[y_idx, x_idx] = data
     arr = np.flipud(arr)
     return arr
+
+
+def get_copernicus_dem_elevation(lat: float, lon: float):
+    """Get elevation from Copernicus DEM.
+
+    Parameters
+    ----------
+    lat : float
+        Latitude.
+    lon : float
+        Longitude.
+
+    Returns
+    -------
+    elevation : float
+        Elevation.
+    """
+
+    point = ee.Geometry.Point(lon, lat)
+    dataset = (
+        ee.ImageCollection("COPERNICUS/DEM/GLO30").select("DEM").filterBounds(point)
+    )
+
+    # returns list of two lists where first list is headers and the second are data
+    point_data: list = dataset.getRegion(point, 30).getInfo()
+    for key, value in zip(point_data[0], point_data[1], strict=True):
+        if key == "DEM":
+            return value

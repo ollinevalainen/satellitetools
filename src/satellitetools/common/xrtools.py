@@ -6,10 +6,12 @@ Created on Tue Mar 16 11:36:13 2021
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
 import sys
-import pandas as pd
+
 import numpy as np
+import pandas as pd
 import xarray as xr
-from satellitetools.biophys import SNAP_BIO_RMSE
+
+from satellitetools.biophys.biophys import SNAP_BIO_RMSE
 
 
 def xr_dataset_to_timeseries(
@@ -29,16 +31,17 @@ def xr_dataset_to_timeseries(
         list of varbiale names as string.
 
     add_uncertainty : bool, default False
-        Adds variable {variable}_uncertainty and confidence intervals to dataframe. Currently,
-        uncertainty is equal to standar error (se) or if variable is biophysical
-        variable from biophys_xarray, it sqrt(se^2 + RMSE_mean^2) where RMSE_mean is
-        propagated uncertainty for the individual observations/pixels uncertainties.
-        Uncertainty for the individual pixels is considered to be the variable RMSE
-        from the SNAP biophysical processor developers
+        Adds variable {variable}_uncertainty and confidence intervals to dataframe.
+        Currently, uncertainty is equal to standar error (se) or if variable is
+        biophysical variable from biophys_xarray, it sqrt(se^2 + RMSE_mean^2) where
+        RMSE_mean is propagated uncertainty for the individual observations/pixels
+        uncertainties. Uncertainty for the individual pixels is considered to be the
+        variable RMSE from the SNAP biophysical processor developers
         (see biophys_xarray.py and linked ATBD) (i.e. same for all pixels).
 
     confidence_level : str, default "95"
-        Confidence level (%) for calculating the confidence interval bounds. Options "90", "95" & "99"
+        Confidence level (%) for calculating the confidence interval bounds.
+        Options "90", "95" & "99"
 
     Returns
     -------
@@ -54,7 +57,7 @@ def xr_dataset_to_timeseries(
         # from snap algorihtm nans occure due to input/output ouf of bounds
         # checking.
         # TODO: flaggging with snap biophys algorith or some other solution to
-        # check which nan are from snap    algorithm and which from 1d to 2d transformation
+        # check which nan are from snap algorithm and which from 1d to 2d transformation
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
 
@@ -68,7 +71,8 @@ def xr_dataset_to_timeseries(
 
         # adjust n if data is resampled
         if var in SNAP_BIO_RMSE.keys():
-            # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+            # if data is upsampled, take this into account in
+            # uncertainty (n "artificially increased")
             # 20 = 20 m which is the SNAP_BIO function standard resolution
             try:
                 resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
@@ -137,7 +141,8 @@ def compute_uncertainty_v2(df, xr_dataset, var):
 
         # adjust n if data is resampled
         if var in SNAP_BIO_RMSE.keys():
-            # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+            # if data is upsampled, take this into account in
+            # uncertainty (n "artificially increased")
             # 20 = 20 m which is the SNAP_BIO function standard resolution
             try:
                 resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
@@ -168,7 +173,8 @@ def compute_uncertainty_v2(df, xr_dataset, var):
         )
         # rmse_means = np.sqrt(np.sum([SNAP_BIO_RMSE[var] ** 2 ] * n)) / n
 
-        # if data is upsampled, take this into account in uncertainty (n "artificially increased")
+        # if data is upsampled, take this into account in
+        # uncertainty (n "artificially increased")
         # 20 = 20 m which is the SNAP_BIO function standard resolution
         # resampling_ratio = 20 / np.abs(xr_dataset.x[1] - xr_dataset.x[0])
         # pixel_multiplier = (

@@ -9,36 +9,36 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Fri Mar 12 15:47:31 2021
 """
-import sys
-import satsearch
-import rasterio
-import numpy as np
-import pandas as pd
-import xarray as xr
-import urllib
 import datetime
+import urllib
 from collections import Counter
 
+import numpy as np
+import pandas as pd
+import rasterio
+import xarray as xr
 import xmltodict
+from pystac_client import Client
 from rasterio import MemoryFile
-from satellitetools.common.vector import (
-    transform_crs,
-    expand_bounds,
-    create_coordinate_arrays,
-)
+
 from satellitetools.common.raster import mask_raster, resample_raster
 from satellitetools.common.sentinel2 import (
-    S2_SCL_CLASSES,
-    S2_REFL_TRANS,
-    S2_FILTER1,
-    filter_s2_qi_dataframe,
     S2_BANDS_AWS_TO_GEE,
+    S2_FILTER1,
+    S2_SCL_CLASSES,
+    filter_s2_qi_dataframe,
+)
+from satellitetools.common.vector import (
+    create_coordinate_arrays,
+    expand_bounds,
+    transform_crs,
 )
 
 # Documentation for options at:
 # https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
 EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
 DEFAULT_REQUEST_LIMIT = 1000
+EARTH_SEARCH_COLLECTION = "sentinel-2-c1-l2a"
 
 AWS_SCL_BAND = "scl"
 
@@ -58,26 +58,26 @@ def search_s2_cogs(aoi, req_params):
     limit = DEFAULT_REQUEST_LIMIT
 
     # Search
-    search = satsearch.Search(
-        url=EARTH_SEARCH_ENDPOINT,
-        collections=["sentinel-2-l2a"],
+    client = Client.open(EARTH_SEARCH_ENDPOINT)
+    search = client.search(
+        collections=[EARTH_SEARCH_COLLECTION],
         datetime=dates,
         bbox=bbox,
         limit=limit,
     )
-    if search.found() == 0:
+    if search.matched() == 0:
         print("No available data for specified time!")
         items = None
     else:
-        items = search.items()
-        print("Found {} available S2 acquisition dates.".format(len(items)))
+        items = search.item_collection()
+        print("Found {} available S2 acquisition dates.".format(search.matched()))
     return items
 
 
 def get_xml_metadata(item):
-    with urllib.request.urlopen(item.assets["granule_metadata"]["href"]) as url:
+    with urllib.request.urlopen(item.assets["granule_metadata"].href) as url:
         metadata = xmltodict.parse(url.read().decode())
-    metadata = metadata.popitem(last=False)[1]
+    metadata = metadata.popitem()[1]
     return metadata
 
 
@@ -122,11 +122,13 @@ def cog_get_s2_scl_data(aoi, item):
     # Scene Classification Band
     band = AWS_SCL_BAND
     # Transform aoi to pixel coordinates/window
-    cog_transform = rasterio.transform.Affine(*item.assets[band]["proj:transform"])
+    cog_transform = rasterio.transform.Affine(
+        *item.assets[band].extra_fields["proj:transform"]
+    )
     window = rasterio.windows.from_bounds(*bbox_cog_crs, cog_transform).round_offsets()
 
     # Get windowed data
-    file_url = item.assets[band]["href"]
+    file_url = item.assets[band].href
     # loop trough bands (file_url) here
     with rasterio.open(file_url) as src:
         kwds = src.profile
@@ -167,7 +169,7 @@ def cog_generate_qi_dict(aoi, item, scl_data):
     projection = {
         "type": "Projection",
         "crs": "EPSG:{}".format(item.properties["proj:epsg"]),
-        "transform": item.assets[AWS_SCL_BAND]["proj:transform"],
+        "transform": item.assets[AWS_SCL_BAND].extra_fields["proj:transform"],
     }
 
     qi_dict = {
@@ -195,13 +197,14 @@ def cog_generate_qi_dict(aoi, item, scl_data):
 
 
 def cog_get_s2_quality_info(aoi, req_params, items):
-    qi_df = pd.DataFrame()
+    qi_dicts = []
     for item in items:
         # print("Retrieving QI for item {}...".format(item.id))
         scl_dict = cog_get_s2_scl_data(aoi, item)
         qi_dict = cog_generate_qi_dict(aoi, item, scl_dict["data"])
-        qi_df = qi_df.append(qi_dict, ignore_index=True)
+        qi_dicts.append(qi_dict)
 
+    qi_df = pd.DataFrame(qi_dicts)
     qi_df = qi_df.sort_values("Date").reset_index(drop=True)
     # Move "Date" to first columns
     cols = list(qi_df)
@@ -255,8 +258,8 @@ def cog_get_s2_band_data(
         return None
     print("{} good observations available. Retrieving data...".format(len(filtered_qi)))
 
-    # Dataframe to collect all data
-    data_df = pd.DataFrame()
+    # List to collect all data
+    data_dicts = []
 
     for item in items:
         if item.id not in filtered_qi["assetid"].values.tolist():
@@ -278,21 +281,26 @@ def cog_get_s2_band_data(
         # currently always includes "SCL" data
         for band in req_params.bands + [AWS_SCL_BAND]:
             cog_transform = rasterio.transform.Affine(
-                *item.assets[band]["proj:transform"]
+                *item.assets[band].extra_fields["proj:transform"]
             )
             window = rasterio.windows.from_bounds(
                 *bbox_cog_crs, cog_transform
             ).round_offsets()
 
-            file_url = item.assets[band]["href"]
+            file_url = item.assets[band].href
+
             # loop trough bands (file_url) here
             with rasterio.open(file_url) as src:
                 kwds = src.profile
                 if band == AWS_SCL_BAND:
                     raster_data = src.read(1, window=window, boundless=True)
                 else:
+                    # Reflectance transoformation and apply offset
+                    band_metadata = item.assets[band].extra_fields["raster:bands"][0]
+                    offset = band_metadata["offset"]
+                    scale = band_metadata["scale"]
                     raster_data = (
-                        src.read(1, window=window, boundless=True) / S2_REFL_TRANS
+                        src.read(1, window=window, boundless=True) * scale + offset
                     )
                 # Form a new clipped rasterio dataset
                 transform = rasterio.windows.transform(window, kwds["transform"])
@@ -340,7 +348,9 @@ def cog_get_s2_band_data(
 
         angles_dict = get_angles(item)
         data_dict.update(angles_dict)
-        data_df = data_df.append(data_dict, ignore_index=True)
+        data_dicts.append(data_dict)
+
+    data_df = pd.DataFrame(data_dicts)
     data_df = data_df.sort_values("Date").reset_index(drop=True)
 
     # Transform to xarray dataset

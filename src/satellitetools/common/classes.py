@@ -8,10 +8,8 @@ TODO: UPDATE docstrings!!
 Created on Tue Mar 16 10:45:05 2021
 """
 import sys
-from satellitetools.common.sentinel2 import (
-    S2_BANDS_COG,
-    S2_BANDS_GEE,
-)
+
+from satellitetools.common.sentinel2 import S2_BANDS_COG, S2_BANDS_GEE
 
 
 class RequestParams:
@@ -53,10 +51,12 @@ class RequestParams:
             The default is ['B3', 'B4', 'B5',
             'B6', 'B7', 'B8A', 'B11', 'B12'].
         target_gsd : float
-            Requested Ground Sampling Distance (GSD). All bands will be resampled to this resolution.
+            Requested Ground Sampling Distance (GSD). All bands will be resampled to
+            this resolution.
             Default 20m.
         qi_evaluation_scale : float
-            Define alternative scale for quality evaluation. Default is 20 m as it is Sentinel-2 SCL band's resolution.
+            Define alternative scale for quality evaluation. Default is 20 m as it is
+            Sentinel-2 SCL band's resolution.
         Returns
         -------
         None.

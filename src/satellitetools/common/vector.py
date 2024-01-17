@@ -5,9 +5,9 @@ Created on Tue Mar 16 11:23:20 2021
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
+import numpy as np
 import pyproj
 from shapely.ops import transform
-import numpy as np
 
 
 def transform_crs(aoi_geometry, src_crs: str, dst_crs: str):
