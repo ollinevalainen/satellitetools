@@ -19,7 +19,7 @@ See examples/gee_example.py and examples/aws_cog examples for simple usage.
 **Installation**
 
 ```console
-pip install git+https://github.com/ollinevalainen/satellitetools.git@develop-poetry
+pip install git+https://github.com/ollinevalainen/satellitetools.git@develop
 ```
 
 
