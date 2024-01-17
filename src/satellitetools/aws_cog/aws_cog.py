@@ -25,7 +25,6 @@ from satellitetools.common.raster import mask_raster, resample_raster
 from satellitetools.common.sentinel2 import (
     S2_BANDS_AWS_TO_GEE,
     S2_FILTER1,
-    S2_REFL_TRANS,
     S2_SCL_CLASSES,
     filter_s2_qi_dataframe,
 )
@@ -39,6 +38,7 @@ from satellitetools.common.vector import (
 # https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
 EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
 DEFAULT_REQUEST_LIMIT = 1000
+EARTH_SEARCH_COLLECTION = "sentinel-2-c1-l2a"
 
 AWS_SCL_BAND = "scl"
 
@@ -60,7 +60,7 @@ def search_s2_cogs(aoi, req_params):
     # Search
     client = Client.open(EARTH_SEARCH_ENDPOINT)
     search = client.search(
-        collections=["sentinel-2-l2a"],
+        collections=[EARTH_SEARCH_COLLECTION],
         datetime=dates,
         bbox=bbox,
         limit=limit,
@@ -288,14 +288,19 @@ def cog_get_s2_band_data(
             ).round_offsets()
 
             file_url = item.assets[band].href
+
             # loop trough bands (file_url) here
             with rasterio.open(file_url) as src:
                 kwds = src.profile
                 if band == AWS_SCL_BAND:
                     raster_data = src.read(1, window=window, boundless=True)
                 else:
+                    # Reflectance transoformation and apply offset
+                    band_metadata = item.assets[band].extra_fields["raster:bands"][0]
+                    offset = band_metadata["offset"]
+                    scale = band_metadata["scale"]
                     raster_data = (
-                        src.read(1, window=window, boundless=True) / S2_REFL_TRANS
+                        src.read(1, window=window, boundless=True) * scale + offset
                     )
                 # Form a new clipped rasterio dataset
                 transform = rasterio.windows.transform(window, kwds["transform"])
