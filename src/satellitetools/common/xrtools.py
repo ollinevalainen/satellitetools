@@ -101,7 +101,7 @@ def xr_dataset_to_timeseries(
         df[var + "_se"] = df[var + "_std"] / np.sqrt(sample_n)
 
         if add_uncertainty or add_confidence_intervals:
-            df = compute_uncertainty_v2(df, xr_dataset, var)
+            df = compute_uncertainty(df, xr_dataset, var)
 
             if add_confidence_intervals:
                 df = compute_confidence_intervals(
@@ -119,22 +119,12 @@ def xr_dataset_to_timeseries(
     return df
 
 
-def compute_uncertainty(df, var):
-    if var in SNAP_BIO_RMSE.keys():
-        df[var + "_uncertainty"] = np.sqrt(
-            df[var + "_se"] ** 2 + SNAP_BIO_RMSE[var] ** 2
-        )
-    else:
-        df[var + "_uncertainty"] = df[var + "_se"]
-    return df
-
-
 def propagate_rmse(n, rmse):
     propagated_rmse = np.sqrt(np.sum([rmse**2] * int(n))) / n
     return propagated_rmse
 
 
-def compute_uncertainty_v2(df, xr_dataset, var):
+def compute_uncertainty(df, xr_dataset, var):
     if var in SNAP_BIO_RMSE.keys():
         nans = np.isnan(xr_dataset[var]).sum(dim=["x", "y"])
         sample_n = len(xr_dataset[var].x) * len(xr_dataset[var].y) - nans
