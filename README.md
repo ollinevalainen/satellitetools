@@ -20,7 +20,7 @@ If you use gee, initialize ee using ee.Initialize(possible_arguments_here) befor
 **Installation**
 
 ```console
-pip install git+https://github.com/ollinevalainen/satellitetools.git@develop-poetry
+pip install git+https://github.com/ollinevalainen/satellitetools.git@develop
 ```
 
 
