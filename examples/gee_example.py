@@ -11,6 +11,7 @@ Example of GEE usage
 # %%
 import os
 
+import ee
 import geopandas as gpd
 
 import satellitetools.biophys.biophys as biophys
@@ -20,6 +21,7 @@ from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
 from satellitetools.common.wrappers import get_s2_qi_and_data
 from satellitetools.common.xrtools import xr_dataset_to_timeseries
 
+ee.Initialize()  # Set your project or other initialization details if required
 # %% Get data
 package_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), os.pardir))
 

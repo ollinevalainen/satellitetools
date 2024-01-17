@@ -7,8 +7,9 @@ This package has currently tools for getting Sentinel-2 data from Google Earth E
 
 See examples/gee_example.py and examples/aws_cog examples for simple usage.
 
+If you use gee, initialize ee using ee.Initialize(possible_arguments_here) before calling gee functions.
+
 **WARNING**:
-* GEE data is currently retrieved with 10m resolution (scale=10), so the 20m resolution bands are resampled.
 * The biophysical processor implementation in this package does not currently use the convex hull check (see the Java code and ATBD) and does not have as extensive input/output validity flagging as the original version in SNAP.
 
 **TODO**:

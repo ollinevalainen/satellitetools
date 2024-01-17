@@ -24,10 +24,7 @@ from satellitetools.common.sentinel2 import (
     filter_s2_qi_dataframe,
 )
 
-ee.Initialize()
-
 NO_DATA = -99999
-GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
 GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 
