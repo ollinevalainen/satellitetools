@@ -7,14 +7,40 @@ TODO: UPDATE docstrings!!
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021
 """
+import os
+from typing import Optional, Tuple, Union
+
 import numpy as np
 import rasterio
 from rasterio import mask
 from rasterio.enums import Resampling
+from rasterio.io import MemoryFile
 from rasterio.windows import get_data_window
+from shapely.geometry import Polygon
 
 
-def mask_raster(raster, aoi_geometry, no_data=0):
+def mask_raster(
+    raster: Union[MemoryFile, os.PathLike],
+    aoi_geometry: Polygon,
+    no_data: Union[float, int],
+) -> Tuple[np.ndarray, dict]:
+    """Mask raster data with area of interest geometry.
+
+    Parameters:
+    ----------------
+    raster: Union[MemoryFile, os.PathLike]
+        Raster data.
+    aoi_geometry: Polygon
+        Area of interest geometry.
+    no_data: Union[float, int]
+        No data value.
+
+    Returns:
+    ----------------
+    Tuple[np.ndarray, dict]
+        Tuple of masked data and metadata.
+    """
+
     with raster.open() as dataset:
         kwds = dataset.profile
         masked_data, masked_transform = mask.mask(
@@ -36,14 +62,14 @@ def mask_raster(raster, aoi_geometry, no_data=0):
             nodata=no_data,
         )
         if np.isnan(no_data):
-            # get_data_window does not work with np.nan, change temporally
-            NODATA = -99999
-            masked_data[np.isnan(masked_data)] = NODATA
+            # get_data_window does not work with np.nan, change temporary to -99999
+            tmp_no_data = -99999
+            masked_data[np.isnan(masked_data)] = tmp_no_data
         else:
-            NODATA = no_data
+            tmp_no_data = no_data
 
         # crop nodata row and columns
-        crop_window = get_data_window(masked_data, nodata=NODATA)
+        crop_window = get_data_window(masked_data, nodata=tmp_no_data)
 
         cropped_data = masked_data[
             0,
@@ -52,7 +78,7 @@ def mask_raster(raster, aoi_geometry, no_data=0):
         ]
 
         # change nodata to user-defined
-        cropped_data[cropped_data == NODATA] = no_data
+        cropped_data[cropped_data == tmp_no_data] = no_data
 
         cropped_kwds = masked_kwds.copy()
         cropped_kwds.update(
@@ -64,7 +90,33 @@ def mask_raster(raster, aoi_geometry, no_data=0):
     return cropped_data, cropped_kwds
 
 
-def resample_raster(raster, target_gsd, target_height=None, target_width=None):
+def resample_raster(
+    raster: Union[MemoryFile, os.PathLike],
+    target_gsd: float,
+    resampling_method: Resampling,
+    target_height: Optional[int] = None,
+    target_width: Optional[int] = None,
+) -> Tuple[np.ndarray, dict]:
+    """Resample raster data to target ground sample distance.
+
+    Parameters:
+    ----------------
+    raster: Union[MemoryFile, os.PathLike]
+        Raster data.
+    target_gsd: float
+        Target ground sample distance.
+    resampling_method: Resampling
+        Resampling method.
+    target_height: Optional[int]
+        Target height.
+    target_width: Optional[int]
+        Target width.
+
+    Returns:
+    ----------------
+    Tuple[np.ndarray, dict]
+        Tuple of resampled data and metadata.
+    """
     with raster.open() as dataset:
         # a first parameter in Affine i.e. the pixel x size
         scale_factor = dataset.profile["transform"].a / target_gsd
@@ -81,16 +133,20 @@ def resample_raster(raster, target_gsd, target_height=None, target_width=None):
 
         data = dataset.read(
             out_shape=(dataset.count, new_height, new_width),
-            resampling=Resampling.bilinear,
+            resampling=resampling_method,
         )
 
         # scale image transform
-        new_transform = dataset.transform * dataset.transform.scale(
-            (dataset.width / data.shape[-1]), (dataset.height / data.shape[-2])
-        )
+        # new_transform = dataset.transform * dataset.transform.scale(
+        #     (dataset.width / data.shape[-1]), (dataset.height / data.shape[-2])
+        # )
+        new_transform = dataset.transform * dataset.transform.scale(1 / scale_factor)
 
         new_kwds = dataset.profile
         new_kwds.update(
-            transform=new_transform, driver="GTiff", height=new_height, width=new_width
+            transform=new_transform,
+            driver="GTiff",
+            height=data.shape[-2],
+            width=data.shape[-1],
         )
     return data, new_kwds
