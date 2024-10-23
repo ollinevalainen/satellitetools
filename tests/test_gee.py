@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import ee
@@ -6,7 +7,9 @@ from shapely.geometry import Polygon
 import satellitetools as sattools
 from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
 
-ee.Initialize(project="satellitetools-dev")
+ee_project = os.environ.get("EE_PROJECT_PYTEST")
+ee.Initialize(project=ee_project)
+
 qvidja_ec_field_geom = [
     [22.3913931, 60.295311],
     [22.3917056, 60.2951721],

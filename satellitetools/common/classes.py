@@ -65,3 +65,12 @@ class AOI:
             f"AOI(name={self.name}, geometry={self.geometry}, "
             f"geometry_crs={self.geometry_crs}, tile={self.tile})"
         )
+
+
+# Deprecated
+class RequestParams:
+    def __init__(self, *args, **kwargs):
+        raise DeprecationWarning(
+            "RequestParams is deprecated. Replace with Sentinel2RequestParams from"
+            "common.sentinel2 with same parameters."
+        )

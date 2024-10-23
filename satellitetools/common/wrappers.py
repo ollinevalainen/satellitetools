@@ -58,9 +58,10 @@ def get_s2_qi_and_data(
     data_collection.get_quality_info()
     data_collection.filter_s2_items(qi_threshold, qi_filter)
 
-    if not data_collection.get_s2_data():
+    if len(data_collection.s2_items) == 0:
         print("No new observations for area %s" % aoi.name)
     else:
+        data_collection.get_s2_data()
         data_collection.data_to_xarray()
 
     return data_collection.quality_information, data_collection.xr_dataset
