@@ -12,8 +12,9 @@ Created on Fri Mar 12 15:47:31 2021
 import datetime
 import urllib
 from collections import Counter
+from enum import Enum
 from multiprocessing import Pool
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Union
 from warnings import warn
 
 import numpy as np
@@ -42,14 +43,123 @@ from satellitetools.common.vector import (
     transform_crs,
 )
 
-# Documentation for options at:
-# https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
-EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
-DEFAULT_REQUEST_LIMIT = 1000
-EARTH_SEARCH_COLLECTION = "sentinel-2-c1-l2a"
-
-
 BUFFER_MULTIPLIER = 8
+
+
+class EarthSearchCollection(str, Enum):
+    SENTINEL2_C1_L2A = "sentinel-2-c1-l2a"
+    SENTINEL2_L2A = "sentinel-2-l2a"
+
+
+class EarthSearch:
+    # Documentation for options at:
+    # https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
+    EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
+    DEFAULT_REQUEST_LIMIT = 1000
+
+    def __init__(
+        self,
+        datestart: Union[str, pd.Timestamp, datetime.datetime],
+        dateend: Union[str, pd.Timestamp, datetime.datetime],
+        bbox: List[float],
+        collection: EarthSearchCollection,
+    ):
+        self.datestart = pd.to_datetime(datestart)
+        self.dateend = pd.to_datetime(dateend)
+        if self.datestart > self.dateend:
+            raise ValueError("datestart must be before dateend.")
+        self.bbox = bbox
+        self.collection = collection
+        self.limit = self.DEFAULT_REQUEST_LIMIT
+
+    def search_collection(
+        self,
+        datestart: pd.Timestamp,
+        dateend: pd.Timestamp,
+        collection: EarthSearchCollection,
+    ):
+
+        dates = "{}/{}".format(
+            datestart.isoformat() + "Z",
+            dateend.isoformat() + "Z",
+        )
+        # Search
+        client = Client.open(self.EARTH_SEARCH_ENDPOINT)
+        search = client.search(
+            collections=[collection],
+            datetime=dates,
+            bbox=self.bbox,
+            limit=self.limit,
+        )
+
+        if search.matched() == 0:
+            print("No data for specified time in collection {}!".format(collection))
+            items = None
+        else:
+            print(
+                "Found {} S2 images in collection {}.".format(
+                    search.matched(), collection
+                )
+            )
+            items = search.item_collection()
+
+        return items
+
+    def get_items(self):
+        all_items = []
+        # Search for items
+        items = self.search_collection(self.datestart, self.dateend, self.collection)
+        if items:
+            all_items.extend(items)
+
+        # Search for items from 2022 in EarthSearchCollection.SENTINEL2_L2A since at the
+        # moment (2024-10-23) SENTINEL2_C1_L2A collection is still missing that year
+        if (
+            self.collection == EarthSearchCollection.SENTINEL2_C1_L2A
+            and self.datestart.year <= 2022
+            and self.dateend.year >= 2022
+        ):
+            if self.datestart.year < 2022:
+                datestart_2022 = pd.Timestamp("2022-01-01")
+            else:
+                datestart_2022 = self.datestart
+            if self.dateend.year > 2022:
+                dateend_2022 = pd.Timestamp("2022-12-31")
+            else:
+                dateend_2022 = self.dateend
+            items_2022 = self.search_collection(
+                datestart_2022, dateend_2022, EarthSearchCollection.SENTINEL2_L2A
+            )
+            if items_2022:
+                all_items.extend(items_2022)
+                # Check if there's duplicate items from SENTINEL2_C1_L2A and
+                # SENTINEL2_L2A. Keep the ones from SENTINEL2_C1_L2A.
+                all_items = remove_duplicate_items(all_items)
+        return all_items
+
+
+def remove_duplicate_items(items):
+    # Find duplicate items (same "s2:product_uri" )
+    duplicate_product_ids = []
+    all_product_ids = []
+    for item in items:
+        product_id = item.properties["s2:product_uri"]
+        all_product_ids.append(product_id)
+        if product_id in all_product_ids:
+            duplicate_product_ids.append(product_id)
+
+    # For duplicate items keep the one with
+    # properties["processing:software"] == "sentinel-2-c1-l2a-to-stac"
+    # and remove the one with properties["processing:software"] == "sentinel2-to-stac"
+    filtered_items = []
+    for item in items:
+        product_id = item.properties["s2:product_uri"]
+        if product_id in duplicate_product_ids:
+            if "sentinel-2-c1-l2a-to-stac" in item.properties["processing:software"]:
+                filtered_items.append(item)
+        else:
+            filtered_items.append(item)
+    return items
 
 
 class AWSSentinel2DataCollection(Sentinel2DataCollection):
@@ -97,28 +207,15 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
                 self.req_params.datestart, self.req_params.dateend, self.aoi.name
             )
         )
-        # Options
         bbox = list(self.aoi.geometry.bounds)
-        dates = "{}/{}".format(
-            pd.to_datetime(self.req_params.datestart).isoformat() + "Z",
-            pd.to_datetime(self.req_params.dateend).isoformat() + "Z",
-        )
-        limit = DEFAULT_REQUEST_LIMIT
-
-        # Search
-        client = Client.open(EARTH_SEARCH_ENDPOINT)
-        search = client.search(
-            collections=[EARTH_SEARCH_COLLECTION],
-            datetime=dates,
+        items = EarthSearch(
+            datestart=self.req_params.datestart,
+            dateend=self.req_params.dateend,
             bbox=bbox,
-            limit=limit,
-        )
-        if search.matched() == 0:
-            print("No available data for specified time!")
-            items = None
-        else:
-            items = search.item_collection()
-            print("Found {} available S2 acquisition dates.".format(search.matched()))
+            collection=EarthSearchCollection.SENTINEL2_C1_L2A,
+        ).get_items()
+
+        if items:
             self.s2_items = [AWSSentinel2Item(item) for item in items]
             self.sort_s2_items()
 
@@ -315,8 +412,15 @@ class AWSSentinel2Item(Sentinel2Item):
             if band == S2Band.SCL:
                 band_data = src.read(1, window=window, boundless=True)
             else:
-                # Reflectance transformation and apply offset
-                offset = band_metadata["offset"]
+                # Reflectance transformation and apply offset if not applied
+                # Not applied necessarily in the old collection
+                if "earthsearch:boa_offset_applied" in self.source_item.properties:
+                    offset_applied = self.source_item.properties[
+                        "earthsearch:boa_offset_applied"
+                    ]
+                else:
+                    offset_applied = False
+                offset = band_metadata["offset"] if not offset_applied else 0
                 scale = band_metadata["scale"]
                 band_data = src.read(1, window=window, boundless=True) * scale + offset
 

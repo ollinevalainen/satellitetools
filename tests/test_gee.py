@@ -72,6 +72,22 @@ class TestGEE:
             Path(__file__).parent / "test_data" / "test_gee_20m.nc"
         )
 
+    def test_get_s2_data_2022(self):
+        self.req_params.datestart = "2022-06-01"
+        self.req_params.dateend = "2022-06-15"
+        self.req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
+        s2_data_collection = sattools.gee.GEESentinel2DataCollection(
+            test_AOI, self.req_params
+        )
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        assert s2_data_collection.s2_items is not None
+        s2_data_collection.data_to_xarray()
+        s2_data_collection.xr_dataset.to_netcdf(
+            Path(__file__).parent / "test_data" / "test_gee_2022.nc"
+        )
+
     def test_get_s2_data_10_20_bands_10m(self):
         self.req_params.bands = test_bands_10_20
         self.req_params.target_gsd = 10

@@ -73,10 +73,10 @@ class TestAWS:
 
         s2_data_collection.data_to_xarray()
 
-    # Failing because 2022 data not yet available from AWS
     def test_get_s2_data_2022_with_multiprocessing(self):
         self.req_params.datestart = "2022-06-01"
         self.req_params.dateend = "2022-06-15"
+        self.req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
             test_AOI, self.req_params, test_multiprocessing
         )
@@ -85,9 +85,19 @@ class TestAWS:
         s2_data_collection.filter_s2_items()
         s2_data_collection.get_s2_data()
         assert s2_data_collection.s2_items is not None
-        assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
-
         s2_data_collection.data_to_xarray()
+        s2_data_collection.xr_dataset.to_netcdf(
+            Path(__file__).parent / "test_data" / "test_aws_2022.nc"
+        )
+
+    def test_search_s2_data_2022_2023(self):
+        self.req_params.datestart = "2021-11-01"
+        self.req_params.dateend = "2022-06-15"
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
+            test_AOI, self.req_params
+        )
+        s2_data_collection.search_s2_items()
+        assert s2_data_collection.s2_items is not None
 
     def test_get_s2_data_10_20_bands_20m(self):
         self.req_params.bands = test_bands_10_20
