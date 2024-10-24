@@ -4,7 +4,6 @@ from pathlib import Path
 from shapely.geometry import Polygon
 
 import satellitetools as sattools
-from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
 
 qvidja_ec_field_geom = [
     [22.3913931, 60.295311],
@@ -36,19 +35,17 @@ test_AOI = sattools.AOI("qvidja_ec", qvidja_polygon, "EPSG:4326")
 test_datestart = "2023-06-01"
 test_dateend = "2023-06-15"
 test_bands = [sattools.S2Band.B4, sattools.S2Band.B8A, sattools.S2Band.SCL]
-test_bands_10_20 = [sattools.S2Band(b) for b in S2_BANDS_10_20_GEE]
+test_bands_10_20 = sattools.S2Band.get_10m_to_20m_bands()
 test_multiprocessing = 4
 
 
 class TestAWS:
-    req_params = sattools.Sentinel2RequestParams(
-        test_datestart, test_dateend, sattools.DataSource.AWS_COG, test_bands
-    )
-
     def test_get_s2_data(self):
-
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()
@@ -60,9 +57,11 @@ class TestAWS:
         s2_data_collection.data_to_xarray()
 
     def test_get_s2_data_with_multiprocessing(self):
-
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params, test_multiprocessing
+            test_AOI, req_params, test_multiprocessing
         )
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()
@@ -74,11 +73,14 @@ class TestAWS:
         s2_data_collection.data_to_xarray()
 
     def test_get_s2_data_2022_with_multiprocessing(self):
-        self.req_params.datestart = "2022-06-01"
-        self.req_params.dateend = "2022-06-15"
-        self.req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
+        req_params.datestart = "2022-06-01"
+        req_params.dateend = "2022-06-15"
+        req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params, test_multiprocessing
+            test_AOI, req_params, test_multiprocessing
         )
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()
@@ -91,18 +93,24 @@ class TestAWS:
         )
 
     def test_search_s2_data_2022_2023(self):
-        self.req_params.datestart = "2021-11-01"
-        self.req_params.dateend = "2022-06-15"
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
+        req_params.datestart = "2021-11-01"
+        req_params.dateend = "2022-06-15"
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.search_s2_items()
         assert s2_data_collection.s2_items is not None
 
     def test_get_s2_data_10_20_bands_20m(self):
-        self.req_params.bands = test_bands_10_20
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
+        req_params.bands = test_bands_10_20
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params, os.cpu_count()
+            test_AOI, req_params, os.cpu_count()
         )
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()
@@ -117,10 +125,13 @@ class TestAWS:
         )
 
     def test_get_s2_data_10_20_bands_10m(self):
-        self.req_params.bands = test_bands_10_20
-        self.req_params.target_gsd = 10
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.AWS, test_bands
+        )
+        req_params.bands = test_bands_10_20
+        req_params.target_gsd = 10
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
-            test_AOI, self.req_params, os.cpu_count()
+            test_AOI, req_params, os.cpu_count()
         )
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()

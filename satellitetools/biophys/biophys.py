@@ -396,8 +396,32 @@ def compute_gcc(ds: xr.Dataset) -> xr.Dataset:
         Adds 'gcc' xr array to xr dataset.
 
     """
-    b2 = ds.band_data.sel(band=S2Band.B2)
-    b3 = ds.band_data.sel(band=S2Band.B3)
-    b4 = ds.band_data.sel(band=S2Band.B4)
+    b2 = ds.band_data.sel(band=S2Band.B2.value)
+    b3 = ds.band_data.sel(band=S2Band.B3.value)
+    b4 = ds.band_data.sel(band=S2Band.B4.value)
     gcc = b3 / (b2 + b3 + b4)
     return ds.assign({VegetationIndex.GCC.value: gcc})
+
+
+def compute_vegetation_index(ds: xr.Dataset, vi: VegetationIndex) -> xr.Dataset:
+    """Compute vegetation index.
+
+    Parameters
+    ----------
+    ds : xarray dataset
+    vi : VegetationIndex
+        Vegetation index to compute.
+
+    Returns
+    -------
+    xarray dataset
+        Adds vegetation index array to xr dataset.
+
+    """
+    if vi == VegetationIndex.NDVI:
+        return compute_ndvi(ds)
+    if vi == VegetationIndex.CI_RED_EDGE:
+        return compute_ci_red_edge(ds)
+    if vi == VegetationIndex.GCC:
+        return compute_gcc(ds)
+    raise ValueError(f"Vegetation index {vi} not found.")

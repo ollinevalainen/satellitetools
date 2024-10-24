@@ -17,7 +17,7 @@ class DataSource(str, Enum):
     """Data source for the data request."""
 
     GEE = "gee"
-    AWS_COG = "aws_cog"
+    AWS = "aws_cog"
 
 
 class AOI:

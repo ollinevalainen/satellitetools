@@ -310,7 +310,7 @@ class AWSSentinel2Metadata(Sentinel2Metadata):
         assetid = item.id
         productid = s2_product_id
         projection = "EPSG:{}".format(item.properties["proj:epsg"])
-        datasource = DataSource.AWS_COG
+        datasource = DataSource.AWS
 
         self.profiles: Dict[S2Band, dict] = {}  # to store all profiles for bands
         super().__init__(time, tileid, assetid, productid, projection, datasource)

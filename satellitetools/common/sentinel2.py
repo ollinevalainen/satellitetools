@@ -59,6 +59,28 @@ class S2Band(str, Enum):
         """
         return self.value
 
+    @classmethod
+    def get_10m_to_20m_bands(cls) -> List["S2Band"]:
+        """Get 10-20 m bands for the band.
+
+        Returns:
+        ----------------
+        List[S2Band]
+            List of 10-20 m bands.
+        """
+        return [S2Band(b) for b in S2_BANDS_10_20_GEE]
+
+    @classmethod
+    def get_all_bands(cls) -> List["S2Band"]:
+        """Get all bands for the band.
+
+        Returns:
+        ----------------
+        List[S2Band]
+            List of all bands.
+        """
+        return [b for b in S2Band]
+
 
 class SCLClass(Enum):
     """Sentinel-2 Scene Classification Layer (SCL) classes."""

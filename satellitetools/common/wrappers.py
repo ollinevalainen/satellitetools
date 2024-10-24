@@ -48,7 +48,7 @@ def get_s2_qi_and_data(
     if req_params.datasource == DataSource.GEE:
         data_collection = GEESentinel2DataCollection(aoi, req_params)
 
-    elif req_params.datasource == DataSource.AWS_COG:
+    elif req_params.datasource == DataSource.AWS:
         data_collection = AWSSentinel2DataCollection(aoi, req_params)
         data_collection.search_s2_items()
     else:

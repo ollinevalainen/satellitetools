@@ -5,7 +5,6 @@ import ee
 from shapely.geometry import Polygon
 
 import satellitetools as sattools
-from satellitetools.common.sentinel2 import S2_BANDS_10_20_GEE
 
 ee_project = os.environ.get("EE_PROJECT_PYTEST")
 ee.Initialize(project=ee_project)
@@ -40,18 +39,16 @@ test_AOI = sattools.AOI("qvidja_ec", qvidja_polygon, "EPSG:4326")
 test_datestart = "2023-06-01"
 test_dateend = "2023-06-15"
 test_bands = [sattools.S2Band.B4, sattools.S2Band.B8A, sattools.S2Band.SCL]
-test_bands_10_20 = [sattools.S2Band(b) for b in S2_BANDS_10_20_GEE]
+test_bands_10_20 = sattools.S2Band.get_10m_to_20m_bands()
 
 
 class TestGEE:
-    req_params = sattools.Sentinel2RequestParams(
-        test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
-    )
-
     def test_get_s2_data(self):
-
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
+        )
         s2_data_collection = sattools.gee.GEESentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.get_quality_info()
         s2_data_collection.filter_s2_items()
@@ -61,9 +58,12 @@ class TestGEE:
         s2_data_collection.data_to_xarray()
 
     def test_get_s2_data_10_20_bands_20m(self):
-        self.req_params.bands = test_bands_10_20
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
+        )
+        req_params.bands = test_bands_10_20
         s2_data_collection = sattools.gee.GEESentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.get_quality_info()
         s2_data_collection.filter_s2_items()
@@ -76,11 +76,14 @@ class TestGEE:
         )
 
     def test_get_s2_data_2022(self):
-        self.req_params.datestart = "2022-06-01"
-        self.req_params.dateend = "2022-06-15"
-        self.req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
+        )
+        req_params.datestart = "2022-06-01"
+        req_params.dateend = "2022-06-15"
+        req_params.bands = [sattools.S2Band.B4, sattools.S2Band.B8A]
         s2_data_collection = sattools.gee.GEESentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.get_quality_info()
         s2_data_collection.filter_s2_items()
@@ -92,10 +95,13 @@ class TestGEE:
         )
 
     def test_get_s2_data_10_20_bands_10m(self):
-        self.req_params.bands = test_bands_10_20
-        self.req_params.target_gsd = 10
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
+        )
+        req_params.bands = test_bands_10_20
+        req_params.target_gsd = 10
         s2_data_collection = sattools.gee.GEESentinel2DataCollection(
-            test_AOI, self.req_params
+            test_AOI, req_params
         )
         s2_data_collection.get_quality_info()
         s2_data_collection.filter_s2_items()
