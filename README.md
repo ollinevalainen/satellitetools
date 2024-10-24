@@ -121,16 +121,19 @@ df_quality_information, ds_s2_data = sattools.wrappers.get_s2_qi_and_data(
 **Alternatively without the wrapper:**
 
 This way you can access the data collection class with some extra metadata and with AWS
-the source data item.
+the source data item. With AWS data source you can speed-up process by concurrently fetching 
+multiple images with multiprocessing parameter.
 ```python
 if req_params.datasource == DataSource.GEE:
     s2_data_collection = GEESentinel2DataCollection(aoi, req_params)
-elif req_params.datasource == DataSource.AWS:
-    s2_data_collection = AWSSentinel2DataCollection(aoi, req_params)
+if req_params.datasource == DataSource.AWS:
+    import os
+    number_of_processes = os.cpu_count() - 1 # or something else
+    s2_data_collection = AWSSentinel2DataCollection(aoi, req_params, multiprocessing=number_of_processes)
     s2_data_collection.search_s2_items()
 
 s2_data_collection.get_quality_info()
-qi_threshold=0.02
+qi_threshold=0.02 # without specifying default 0 will be used
 qi_filter=S2_FILTER1
 s2_data_collection.filter_s2_items(qi_threshold, qi_filter)
 s2_data_collection.get_s2_data()
