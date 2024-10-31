@@ -144,3 +144,17 @@ class TestAWS:
         s2_data_collection.xr_dataset.to_netcdf(
             Path(__file__).parent / "test_data" / "test_aws_10m.nc"
         )
+
+    def test_get_s2_data_with_multiprocessing_2020(self):
+        req_params = sattools.Sentinel2RequestParams(
+            "2020-06-01", "2020-06-15", sattools.DataSource.AWS, test_bands
+        )
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
+            test_AOI, req_params, test_multiprocessing
+        )
+        s2_data_collection.search_s2_items()
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        assert s2_data_collection.s2_items is not None
+        assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
