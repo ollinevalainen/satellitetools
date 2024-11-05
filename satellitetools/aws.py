@@ -55,7 +55,7 @@ class EarthSearch:
     # Documentation for options at:
     # https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
     EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
-    DEFAULT_REQUEST_LIMIT = 1000
+    DEFAULT_REQUEST_LIMIT = 10000
 
     def __init__(
         self,
