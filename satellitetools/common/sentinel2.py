@@ -599,18 +599,19 @@ class Sentinel2DataCollection:
             all_metadata["productid"].append(s2_item.metadata.productid)
             all_metadata["datasource"].append(s2_item.metadata.datasource.value)
 
-            all_metadata["sun_azimuth"].append(
-                s2_item.metadata.observation_geometry.sun_azimuth
-            )
-            all_metadata["sun_zenith"].append(
-                s2_item.metadata.observation_geometry.sun_zenith
-            )
-            all_metadata["view_azimuth"].append(
-                s2_item.metadata.observation_geometry.view_azimuth
-            )
-            all_metadata["view_zenith"].append(
-                s2_item.metadata.observation_geometry.view_zenith
-            )
+            if s2_item.metadata.observation_geometry:
+                all_metadata["sun_azimuth"].append(
+                    s2_item.metadata.observation_geometry.sun_azimuth
+                )
+                all_metadata["sun_zenith"].append(
+                    s2_item.metadata.observation_geometry.sun_zenith
+                )
+                all_metadata["view_azimuth"].append(
+                    s2_item.metadata.observation_geometry.view_azimuth
+                )
+                all_metadata["view_zenith"].append(
+                    s2_item.metadata.observation_geometry.view_zenith
+                )
 
         if multiband_arrays:
             multitemporal_array = np.stack(multiband_arrays)
@@ -640,6 +641,7 @@ class Sentinel2DataCollection:
             {
                 var: (["time"], metadata_var)
                 for var, metadata_var in all_metadata.items()
+                if metadata_var
             }
         )
 
@@ -665,7 +667,6 @@ class Sentinel2DataCollection:
                 "aoi_pixels": aoi_pixels,
             },
         )
-        # ds = ds.transpose("time", "band", "y", "x") # TODO: Check if needed
         self.xr_dataset = ds
 
 

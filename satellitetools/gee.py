@@ -147,6 +147,20 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
                 view_zenith=properties["view_zenith"][i],
             )
 
+            # Check data consistency
+            band_lens = [len(properties[band][i]) for band in bands]
+            coord_lens = [
+                len(properties["x_coords"][i]),
+                len(properties["y_coords"][i]),
+            ]
+            unique_lens = set(band_lens + coord_lens)
+            if len(unique_lens) > 1:
+                print(
+                    f"Data lengths are not consistent for {productid}. "
+                    "Dropping product."
+                )
+                self.drop_s2_item_with_productid(productid)
+                continue
             for band in bands:
                 ys = properties["y_coords"][i]
                 xs = properties["x_coords"][i]
@@ -189,6 +203,21 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
             if s2_item.metadata.productid == productid:
                 return s2_item
         return None
+
+    def drop_s2_item_with_productid(self, productid: str):
+        """Drop Sentinel-2 item with productid.
+
+        Parameters
+        ----------
+        productid : str
+            Sentinel-2 product ID.
+
+        """
+        self.s2_items = [
+            s2_item
+            for s2_item in self.s2_items
+            if s2_item.metadata.productid != productid
+        ]
 
     def ee_feature_from_s2_items(self) -> ee.Feature:
         """Create GEE feature from Sentinel-2 items.

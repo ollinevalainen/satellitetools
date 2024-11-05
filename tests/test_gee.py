@@ -41,6 +41,17 @@ test_dateend = "2023-06-15"
 test_bands = [sattools.S2Band.B4, sattools.S2Band.B8A, sattools.S2Band.SCL]
 test_bands_10_20 = sattools.S2Band.get_10m_to_20m_bands()
 
+test_polygon_lake = Polygon(
+    [
+        [23.76072665998865, 60.78877854773374],
+        [23.760445355871518, 60.78702931064117],
+        [23.76156985134052, 60.7871417840537],
+        [23.76191205042599, 60.788728451538454],
+        [23.76072665998865, 60.78877854773374],
+    ]
+)
+test_lake_AOI = sattools.AOI("lake", test_polygon_lake, "EPSG:4326")
+
 
 class TestGEE:
     def test_get_s2_data(self):
@@ -112,3 +123,17 @@ class TestGEE:
         s2_data_collection.xr_dataset.to_netcdf(
             Path(__file__).parent / "test_data" / "test_gee_10m.nc"
         )
+
+    def test_get_s2_data_lake(self):
+        req_params = sattools.Sentinel2RequestParams(
+            "2021-01-01", "2021-12-31", sattools.DataSource.GEE, test_bands
+        )
+        s2_data_collection = sattools.gee.GEESentinel2DataCollection(
+            test_lake_AOI, req_params
+        )
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        assert s2_data_collection.s2_items is not None
+        assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
+        s2_data_collection.data_to_xarray()
