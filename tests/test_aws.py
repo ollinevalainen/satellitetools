@@ -158,3 +158,23 @@ class TestAWS:
         s2_data_collection.get_s2_data()
         assert s2_data_collection.s2_items is not None
         assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
+
+    def test_search_poygon_in_buffer_zone_2018_2023(self):
+        difficult_polygon = Polygon(
+            [
+                [23.82573048401551, 60.75855515465485],
+                [23.82544917989838, 60.75680426756835],
+                [23.82657367536738, 60.75691684707225],
+                [23.82691587445285, 60.75850501120518],
+                [23.82573048401551, 60.75855515465485],
+            ]
+        )
+        aoi = sattools.AOI("test", difficult_polygon, "EPSG:4326")
+        req_params = sattools.Sentinel2RequestParams(
+            "2019-01-01", "2021-12-31", sattools.DataSource.AWS, test_bands
+        )
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
+            aoi, req_params, test_multiprocessing
+        )
+        s2_data_collection.search_s2_items()
+        print(len(s2_data_collection.s2_items))

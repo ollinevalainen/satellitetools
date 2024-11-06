@@ -79,31 +79,28 @@ class EarthSearch:
         collection: EarthSearchCollection,
     ):
 
-        dates = "{}/{}".format(
-            datestart.isoformat() + "Z",
-            dateend.isoformat() + "Z",
-        )
-        # Search
-        client = Client.open(self.EARTH_SEARCH_ENDPOINT)
-        search = client.search(
-            collections=[collection],
-            datetime=dates,
-            bbox=self.bbox,
-            limit=self.limit,
-        )
-
-        if search.matched() == 0:
-            print("No data for specified time in collection {}!".format(collection))
-            items = None
-        else:
-            print(
-                "Found {} S2 images in collection {}.".format(
-                    search.matched(), collection
-                )
+        # Split queries to half year time ranges
+        time_ranges = split_time_range(datestart, dateend)
+        all_items = []
+        for time_range in time_ranges:
+            dates = "{}/{}".format(
+                time_range[0].isoformat() + "Z",
+                time_range[1].isoformat() + "Z",
             )
-            items = search.item_collection()
+            # Search
+            client = Client.open(self.EARTH_SEARCH_ENDPOINT)
+            search = client.search(
+                collections=[collection],
+                datetime=dates,
+                bbox=self.bbox,
+                limit=self.limit,
+            )
 
-        return items
+            if search.matched() > 0:
+                all_items.extend(search.item_collection())
+
+        print("Found {} items.".format(len(all_items)))
+        return all_items
 
     def get_items(self):
         all_items = []
@@ -789,3 +786,17 @@ def cog_get_s2_band_data(
     data_collection.get_s2_data()
     data_collection.data_to_xarray()
     return data_collection.xr_dataset
+
+
+def split_time_range(datestart: pd.Timestamp, dateend: pd.Timestamp):
+    time_ranges = []
+    current_start = datestart
+
+    while current_start < dateend:
+        next_end = current_start + pd.Timedelta(days=182)  # Approx. 6 months
+        if next_end > dateend:
+            next_end = dateend
+        time_ranges.append((current_start, next_end))
+        current_start = next_end
+
+    return time_ranges
