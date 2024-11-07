@@ -26,6 +26,7 @@ def get_s2_qi_and_data(
     req_params: Sentinel2RequestParams,
     qi_threshold: Optional[float] = 0.02,
     qi_filter: Optional[List[SCLClass]] = S2_FILTER1,
+    multiprocessing: Optional[int] = None,
 ) -> Tuple[pd.DataFrame, xr.Dataset]:
     """Get Sentinel-2 quality information and data.
 
@@ -39,6 +40,8 @@ def get_s2_qi_and_data(
         Quality information threshold.
     qi_filter: Optional[List[SCLClass]]
         Sentinel-2 scene classification filter.
+    multiprocessing: Optional[int]
+        Number of parallel downloads used with AWS data source.
 
     Returns:
     ----------------
@@ -49,7 +52,9 @@ def get_s2_qi_and_data(
         data_collection = GEESentinel2DataCollection(aoi, req_params)
 
     elif req_params.datasource == DataSource.AWS:
-        data_collection = AWSSentinel2DataCollection(aoi, req_params)
+        data_collection = AWSSentinel2DataCollection(
+            aoi, req_params, multiprocessing=multiprocessing
+        )
         data_collection.search_s2_items()
     else:
         raise ValueError(f"Unknown datasource {req_params.datasource}")

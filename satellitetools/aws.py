@@ -380,16 +380,17 @@ class AWSSentinel2Item(Sentinel2Item):
         ]
         spatial_resolution = band_metadata["spatial_resolution"]
 
-        # if spatial_resolution != target_resolution:  # resampling needed
-        #     resampling_needed = True
-        #     buffer = spatial_resolution * BUFFER_MULTIPLIER
-        #     bbox_data_crs = expand_bounds(bbox_data_crs, buffer)
-        # else:
-        #     resampling_needed = False
+        # Resampling currently done for all bands, even though certain bands would not
+        # need it. Otherwise, the data would not align properly (one pixel difference
+        # between unresampled and resampled bands). TODO: try to figure out a way to
+        # avoid resampling for bands that don't need it.
 
+        # if spatial_resolution != target_resolution:  # resampling needed
         resampling_needed = True
         buffer = spatial_resolution * BUFFER_MULTIPLIER
         bbox_data_crs = expand_bounds(bbox_data_crs, buffer)
+        # else:
+        #     resampling_needed = False
 
         # # Transform aoi to pixel coordinates/window
         data_transform = rasterio.transform.Affine(
@@ -452,8 +453,6 @@ class AWSSentinel2Item(Sentinel2Item):
 
                 band_data = resampled_data.squeeze()
                 new_kwds = resampled_kwds
-        # else:
-        #     band_data = band_data[np.newaxis, ...]
 
         # Clip data to AOI
         no_data = SCL_NODATA if band == S2Band.SCL else np.nan
@@ -501,13 +500,18 @@ class AWSSentinel2Item(Sentinel2Item):
             raise ValueError("No SCL data available for class percentage calculation")
         else:
             scl_data = self.data[S2Band.SCL]
-            num_of_aoi_pixels = np.sum(scl_data != SCL_NODATA)
-            class_percentages = {}
-            for scl_class in SCLClass:
-                class_percentage = (
-                    np.sum(scl_data == scl_class.value) / num_of_aoi_pixels
-                )
-                class_percentages[scl_class.name] = class_percentage
+            # Sometimes SCL image is faulty and doesn't contain data at the
+            # area of interest. Set class percentages to nan in this case.
+            if scl_data.size == 0:
+                class_percentages = {scl_class.name: np.nan for scl_class in SCLClass}
+            else:
+                num_of_aoi_pixels = np.sum(scl_data != SCL_NODATA)
+                class_percentages = {}
+                for scl_class in SCLClass:
+                    class_percentage = (
+                        np.sum(scl_data == scl_class.value) / num_of_aoi_pixels
+                    )
+                    class_percentages[scl_class.name] = class_percentage
             self.metadata.class_percentages = class_percentages
 
     def create_coordinates(self, band: S2Band):
@@ -646,6 +650,22 @@ def _multiprocess_get_scl_data(
     return results
 
 
+def split_time_range(datestart: pd.Timestamp, dateend: pd.Timestamp):
+    time_ranges = []
+    current_start = datestart
+
+    while current_start < dateend:
+        next_end = current_start + pd.Timedelta(days=182)  # Approx. 6 months
+        if next_end > dateend:
+            next_end = dateend
+        time_ranges.append((current_start, next_end))
+        current_start = next_end
+
+    return time_ranges
+
+
+# Currently unused function, remove if not needed. Doesn't work with the current
+# implementation of AWSSentinel2DataCollection (data not transferred to pd.DataFrame)
 def check_shapes(dataframe, bands):
     # band to band comparison
     dataframe_cp = dataframe.copy()
@@ -786,17 +806,3 @@ def cog_get_s2_band_data(
     data_collection.get_s2_data()
     data_collection.data_to_xarray()
     return data_collection.xr_dataset
-
-
-def split_time_range(datestart: pd.Timestamp, dateend: pd.Timestamp):
-    time_ranges = []
-    current_start = datestart
-
-    while current_start < dateend:
-        next_end = current_start + pd.Timedelta(days=182)  # Approx. 6 months
-        if next_end > dateend:
-            next_end = dateend
-        time_ranges.append((current_start, next_end))
-        current_start = next_end
-
-    return time_ranges

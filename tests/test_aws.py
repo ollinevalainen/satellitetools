@@ -159,7 +159,7 @@ class TestAWS:
         assert s2_data_collection.s2_items is not None
         assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
 
-    def test_search_poygon_in_buffer_zone_2018_2023(self):
+    def test_search_for_long_timeperiod_in_tile_buffer_zone(self):
         difficult_polygon = Polygon(
             [
                 [23.82573048401551, 60.75855515465485],
@@ -177,4 +177,4 @@ class TestAWS:
             aoi, req_params, test_multiprocessing
         )
         s2_data_collection.search_s2_items()
-        print(len(s2_data_collection.s2_items))
+        assert s2_data_collection.s2_items is not None
