@@ -44,7 +44,8 @@ class BiophysVariable(str, Enum):
     LAI_Cab = "lai_cab"
     LAI_Cw = "lai_cw"
 
-    def get_by_name(self, name: str) -> "BiophysVariable":
+    @classmethod
+    def get_by_name(cls, name: str) -> "BiophysVariable":
         """Get BiophysVariable by name.
 
         Parameters

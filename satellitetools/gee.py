@@ -140,12 +140,15 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
             coordinates = {}
             band_data = {}
 
-            observation_geometry = Sentinel2ObservationGeometry(
-                sun_azimuth=properties["sun_azimuth"][i],
-                sun_zenith=properties["sun_zenith"][i],
-                view_azimuth=properties["view_azimuth"][i],
-                view_zenith=properties["view_zenith"][i],
-            )
+            try:
+                observation_geometry = Sentinel2ObservationGeometry(
+                    sun_azimuth=properties["sun_azimuth"][i],
+                    sun_zenith=properties["sun_zenith"][i],
+                    view_azimuth=properties["view_azimuth"][i],
+                    view_zenith=properties["view_zenith"][i],
+                )
+            except KeyError:  # No observation geometry available
+                observation_geometry = None
 
             # Check data consistency
             band_lens = [len(properties[band][i]) for band in bands]
@@ -280,11 +283,18 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         multi_data_collection = MultiGEESentinel2DataCollection(
             [self.aoi], self.req_params
         )
-        multi_data_collection.data_collections[
-            self.aoi.name
-        ].quality_information = self.quality_information
+        multi_data_collection.data_collections[self.aoi.name].quality_information = (
+            self.quality_information
+        )
         multi_data_collection.data_collections[self.aoi.name].s2_items = self.s2_items
         multi_data_collection.ee_get_s2_data()
+        self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
+
+    def search_s2_items(self):
+        multi_data_collection = MultiGEESentinel2DataCollection(
+            [self.aoi], self.req_params
+        )
+        multi_data_collection.ee_search_s2_products()
         self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
 
 
@@ -315,6 +325,74 @@ class MultiGEESentinel2DataCollection:
             aoi.name: GEESentinel2DataCollection(aoi, req_params) for aoi in aois
         }
         self.req_params = req_params
+
+    def ee_search_s2_products(self):
+
+        req_params = self.req_params
+        features = [
+            data_collection.ee_feature_from_aoi()
+            for data_collection in self.data_collections.values()
+        ]
+
+        feature_collection = ee.FeatureCollection(features)
+
+        def ee_get_s2_image_collection_metadata(feature):
+            """Get S2 metadata for images.
+
+            Parameters
+            ----------
+            feature : ee.Feature
+                GEE feature.
+
+            """
+
+            area = feature.geometry()
+            image_collection = (
+                ee.ImageCollection(GEE_DATASET)
+                .filterBounds(area)
+                .filterDate(req_params.datestart, req_params.dateend)
+                .select([GEE_SCL_BAND])
+            )
+
+            def ee_get_s2_image_metadata(img):
+                productid = img.get("PRODUCT_ID")
+                assetid = img.id()
+                tileid = img.get("MGRS_TILE")
+                system_index = img.get("system:index")
+                proj = img.select(GEE_SCL_BAND).projection()
+
+                tmpfeature = (
+                    ee.Feature(ee.Geometry.Point([0, 0]))
+                    .set("productid", productid)
+                    .set("system_index", system_index)
+                    .set("assetid", assetid)
+                    .set("tileid", tileid)
+                    .set("projection", proj)
+                )
+                return tmpfeature
+
+            s2_qi_image_collection = image_collection.map(ee_get_s2_image_metadata)
+
+            return (
+                feature.set(
+                    "productid", s2_qi_image_collection.aggregate_array("productid")
+                )
+                .set(
+                    "system_index",
+                    s2_qi_image_collection.aggregate_array("system_index"),
+                )
+                .set("assetid", s2_qi_image_collection.aggregate_array("assetid"))
+                .set("tileid", s2_qi_image_collection.aggregate_array("tileid"))
+                .set("projection", s2_qi_image_collection.aggregate_array("projection"))
+            )
+
+        s2_meta_feature_collection = feature_collection.map(
+            ee_get_s2_image_collection_metadata
+        ).getInfo()
+
+        for feature in s2_meta_feature_collection["features"]:
+            name = feature["properties"]["name"]
+            self.data_collections[name].create_s2_items(feature)
 
     def ee_get_s2_quality_info(self):
         """Get S2 quality information from GEE."""
@@ -466,26 +544,27 @@ class MultiGEESentinel2DataCollection:
                 proj = img.select(bands[0]).projection()
                 sun_azimuth = img.get("MEAN_SOLAR_AZIMUTH_ANGLE")
                 sun_zenith = img.get("MEAN_SOLAR_ZENITH_ANGLE")
-                view_azimuth = (
-                    ee.Array(
-                        [
-                            img.get("MEAN_INCIDENCE_AZIMUTH_ANGLE_%s" % b)
-                            for b in spectral_bands
-                        ]
+                if spectral_bands:
+                    view_azimuth = (
+                        ee.Array(
+                            [
+                                img.get("MEAN_INCIDENCE_AZIMUTH_ANGLE_%s" % b)
+                                for b in spectral_bands
+                            ]
+                        )
+                        .reduce(ee.Reducer.mean(), [0])
+                        .get([0])
                     )
-                    .reduce(ee.Reducer.mean(), [0])
-                    .get([0])
-                )
-                view_zenith = (
-                    ee.Array(
-                        [
-                            img.get("MEAN_INCIDENCE_ZENITH_ANGLE_%s" % b)
-                            for b in spectral_bands
-                        ]
+                    view_zenith = (
+                        ee.Array(
+                            [
+                                img.get("MEAN_INCIDENCE_ZENITH_ANGLE_%s" % b)
+                                for b in spectral_bands
+                            ]
+                        )
+                        .reduce(ee.Reducer.mean(), [0])
+                        .get([0])
                     )
-                    .reduce(ee.Reducer.mean(), [0])
-                    .get([0])
-                )
 
                 # img = img.resample("bilinear").reproject(crs=crs, scale=resolution)
 
@@ -518,17 +597,19 @@ class MultiGEESentinel2DataCollection:
                     .set("projection", proj)
                     .set("sun_zenith", sun_zenith)
                     .set("sun_azimuth", sun_azimuth)
-                    .set("view_zenith", view_zenith)
-                    .set("view_azimuth", view_azimuth)
                     .set("x_coords", x_coords)
                     .set("y_coords", y_coords)
                     .set(band_data)
                 )
+                if spectral_bands:
+                    tmpfeature = tmpfeature.set("view_zenith", view_zenith)
+                    tmpfeature = tmpfeature.set("view_azimuth", view_azimuth)
+
                 return tmpfeature
 
             s2_data_feature = image_collection.map(ee_get_s2_image_data)
 
-            return (
+            feature = (
                 feature.set("productid", s2_data_feature.aggregate_array("productid"))
                 .set("system_index", s2_data_feature.aggregate_array("system_index"))
                 .set("assetid", s2_data_feature.aggregate_array("assetid"))
@@ -536,12 +617,18 @@ class MultiGEESentinel2DataCollection:
                 .set("projection", s2_data_feature.aggregate_array("projection"))
                 .set("sun_zenith", s2_data_feature.aggregate_array("sun_zenith"))
                 .set("sun_azimuth", s2_data_feature.aggregate_array("sun_azimuth"))
-                .set("view_zenith", s2_data_feature.aggregate_array("view_zenith"))
-                .set("view_azimuth", s2_data_feature.aggregate_array("view_azimuth"))
                 .set("x_coords", s2_data_feature.aggregate_array("x_coords"))
                 .set("y_coords", s2_data_feature.aggregate_array("y_coords"))
                 .set({b: s2_data_feature.aggregate_array(b) for b in bands})
             )
+            if spectral_bands:
+                feature = feature.set(
+                    "view_zenith", s2_data_feature.aggregate_array("view_zenith")
+                )
+                feature = feature.set(
+                    "view_azimuth", s2_data_feature.aggregate_array("view_azimuth")
+                )
+            return feature
 
         s2_data_feature_collection = feature_collection.map(
             ee_get_s2_feature_data

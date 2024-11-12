@@ -1,4 +1,5 @@
 import os
+import pickle  # noqa
 from pathlib import Path
 
 import ee
@@ -136,4 +137,40 @@ class TestGEE:
         s2_data_collection.get_s2_data()
         assert s2_data_collection.s2_items is not None
         assert all([b in s2_data_collection.s2_items[0].data for b in test_bands])
+        s2_data_collection.data_to_xarray()
+
+    def test_search_s2_items(self):
+        req_params = sattools.Sentinel2RequestParams(
+            test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
+        )
+        s2_data_collection = sattools.gee.GEESentinel2DataCollection(
+            test_AOI, req_params
+        )
+        s2_data_collection.search_s2_items()
+        assert s2_data_collection.s2_items is not None
+        # Save s2_data_collection to file
+        with open(
+            Path(__file__).parent / "test_data" / "s2_data_collection_gee.pkl", "wb"
+        ) as f:
+            pickle.dump(s2_data_collection, f)
+
+    def test_get_scl_data_without_quality_information(self):
+        year = 2022
+        date_start = f"{year}-01-01"
+        date_end = f"{year}-12-31"
+        data_source = sattools.DataSource.GEE
+        bands = [sattools.S2Band.SCL]
+        request = sattools.Sentinel2RequestParams(
+            date_start,
+            date_end,
+            data_source,
+            bands=bands,
+            target_gsd=20,
+        )
+        s2_data_collection = sattools.gee.GEESentinel2DataCollection(test_AOI, request)
+        s2_data_collection.search_s2_items()
+        s2_data_collection.filter_s2_items_by_tile()
+        s2_data_collection.get_s2_data()
+        assert s2_data_collection.s2_items is not None
+        assert all([b in s2_data_collection.s2_items[0].data for b in bands])
         s2_data_collection.data_to_xarray()

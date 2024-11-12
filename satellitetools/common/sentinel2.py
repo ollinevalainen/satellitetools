@@ -518,6 +518,34 @@ class Sentinel2DataCollection:
         df_qi.set_index("acquisition_time", inplace=True)
         self.quality_information = df_qi
 
+    def filter_s2_items_by_tile(self, tileid: Optional[str] = None):
+        """Filter S2 items by tile.
+
+        Parameters:
+        ----------------
+        tileid : str
+            Tile ID.
+
+        """
+
+        if tileid is not None:
+            self.s2_items = [
+                s2_item
+                for s2_item in self.s2_items
+                if s2_item.metadata.tileid == tileid
+            ]
+        else:
+            if self.aoi.tile is None:
+                all_tiles = [s2_items.metadata.tileid for s2_items in self.s2_items]
+                most_common_tile = most_common(all_tiles)
+                self.aoi.tile = most_common_tile
+
+            self.s2_items = [
+                s2_item
+                for s2_item in self.s2_items
+                if s2_item.metadata.tileid == self.aoi.tile
+            ]
+
     def filter_s2_items(
         self, qi_threshold: float = 0, qi_filter: List[SCLClass] = S2_FILTER1
     ):
@@ -701,3 +729,7 @@ def filter_s2_qi_dataframe(
     ]
 
     return filtered_s2_qi_df
+
+
+def most_common(lst: list[str]) -> str:
+    return max(set(lst), key=lst.count)

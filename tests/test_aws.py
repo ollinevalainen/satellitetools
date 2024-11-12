@@ -178,3 +178,24 @@ class TestAWS:
         )
         s2_data_collection.search_s2_items()
         assert s2_data_collection.s2_items is not None
+
+    def test_get_scl_data_without_quality_information(self):
+        year = 2023
+        date_start = f"{year}-06-01"
+        date_end = f"{year}-07-01"
+        data_source = sattools.DataSource.AWS
+        bands = [sattools.S2Band.SCL]
+        request = sattools.Sentinel2RequestParams(
+            date_start,
+            date_end,
+            data_source,
+            bands=bands,
+            target_gsd=20,
+        )
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(test_AOI, request)
+        s2_data_collection.search_s2_items()
+        s2_data_collection.filter_s2_items_by_tile()
+        s2_data_collection.get_s2_data()
+        assert s2_data_collection.s2_items is not None
+        assert all([b in s2_data_collection.s2_items[0].data for b in bands])
+        s2_data_collection.data_to_xarray()
