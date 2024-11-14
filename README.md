@@ -18,7 +18,7 @@ free to contact me in case you want more information about this package.
   SNAP here: https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical).
  ATBD: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
 
- ## Major changes from merging develop-2024-update! ##
+ ## Major changes from merging develop-2024-update to develop (develop is now the master)! ##
  **Breaking changes:**
 
     * Renamed xrtools.py to timeseries.py
