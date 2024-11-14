@@ -42,7 +42,7 @@ free to contact me in case you want more information about this package.
 ## Installation ##
 
 ```console
-pip install git+https://github.com/ollinevalainen/satellitetools.git@develop
+pip install git+https://github.com/ollinevalainen/satellitetools.git
 ```
 
 ## About Google Earth Engine ##
