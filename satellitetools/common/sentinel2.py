@@ -514,6 +514,8 @@ class Sentinel2DataCollection:
 
         # Make qi dataframe
         df_qi = pd.DataFrame(qi_dicts)
+        # Make acquisition time utc aware
+        df_qi["acquisition_time"] = pd.to_datetime(df_qi.acquisition_time, utc=True)
         df_qi.sort_values("acquisition_time", inplace=True)
         # Set acquisition time as index
         df_qi.set_index("acquisition_time", inplace=True)
