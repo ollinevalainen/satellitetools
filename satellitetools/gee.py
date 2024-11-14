@@ -10,7 +10,6 @@ Created on Thu Feb  6 15:24:12 2020
 
 """
 import datetime
-from functools import reduce
 from typing import Dict, List, Tuple, Union
 from warnings import warn
 
@@ -637,16 +636,6 @@ class MultiGEESentinel2DataCollection:
         for feature in s2_data_feature_collection["features"]:
             name = feature["properties"]["name"]
             self.data_collections[name].set_s2_item_data(feature)
-
-
-# TODO IS this needed? If yes, do it in sentinel2.py
-def check_data_consistency(df: pd.DataFrame, bands: List[str]):
-    datalengths = [
-        df[b].apply(lambda d: len(d)) == len(df.iloc[0]["x_coords"]) for b in bands
-    ]
-    consistent_data = reduce(lambda a, b: a & b, datalengths)
-    df = df[consistent_data]
-    return df
 
 
 def gee_lists_to_2D_array(

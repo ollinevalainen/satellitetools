@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Common classes for gee and aws_cog process.
-TODO: UPDATE docstrings!!
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021

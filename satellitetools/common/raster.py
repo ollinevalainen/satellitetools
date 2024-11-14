@@ -2,7 +2,6 @@
 # -*- coding: utf-8 -*-
 """
 Functions for raster data handling.
-TODO: UPDATE docstrings!!
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021

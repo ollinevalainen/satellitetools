@@ -546,7 +546,7 @@ class Sentinel2DataCollection:
                 if s2_item.metadata.tileid == self.aoi.tile
             ]
 
-    def filter_s2_items(
+    def filter_s2_items_by_quality_information(
         self, qi_threshold: float = 0, qi_filter: List[SCLClass] = S2_FILTER1
     ):
         """Filter S2 items based on quality information.
@@ -563,21 +563,32 @@ class Sentinel2DataCollection:
             self.quality_information, qi_threshold, qi_filter
         )
 
-        # Filter to specified tile or use the first tile
-        if self.aoi.tile is None:
-            min_tile = min(filtered_qi["tileid"].values)
-            filtered_qi = filtered_qi[filtered_qi["tileid"] == min_tile]
-            self.aoi.tile = min_tile
-        else:
-            filtered_qi = filtered_qi[filtered_qi["tileid"] == self.aoi.tile]
-
         # IDs for images passing the quality filter
         assetids = filtered_qi["assetid"].values.tolist()
 
-        # Remove items that do not pass the quality filter
+        # Remove items that do not pass the quality
         self.s2_items = [
             s2_item for s2_item in self.s2_items if s2_item.metadata.assetid in assetids
         ]
+
+    def filter_s2_items(
+        self, qi_threshold: float = 0, qi_filter: List[SCLClass] = S2_FILTER1
+    ):
+        """Filter S2 items based on quality information.
+
+        Parameters:
+        ----------------
+        qi_threshold : float
+            Quality indicator threshold.
+        qi_filter : List[SCLClass]
+            Quality indicator filter.
+
+        """
+        # Filter by quality information
+        self.filter_s2_items_by_quality_information(qi_threshold, qi_filter)
+
+        # Filter to specified tile or use the first tile
+        self.filter_s2_items_by_tile()
 
     def sort_s2_items(self):
         """Sort S2 items by acquisition time."""
