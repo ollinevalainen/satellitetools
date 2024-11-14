@@ -266,7 +266,8 @@ class Sentinel2RequestParams:
         self.dateend = dateend
         self.datasource = datasource
         if bands:
-            self.bands = bands
+            # Validate input and convert to S2Band if strings
+            self.bands = [S2Band(band) for band in bands]
         else:
             self.bands = [band for band in S2Band]
         self.target_gsd = target_gsd
