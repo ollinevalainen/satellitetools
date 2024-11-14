@@ -18,6 +18,27 @@ free to contact me in case you want more information about this package.
   SNAP here: https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical).
  ATBD: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
 
+ ## Major changes from merging develop-2024-update! ##
+ **Breaking changes:**
+
+    * Renamed xrtools.py to timeseries.py
+    * RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
+    * Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
+
+**New features:**
+
+    * Refactored and made codes more object-oriented and modular:
+    * There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
+        - GEESentinel2DataCollection
+        - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
+    * The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
+    * Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
+    * Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
+    * Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
+    * Added tests.
+    * Improved docstrings, added examples and updated README.
+
+
 ## Installation ##
 
 ```console
