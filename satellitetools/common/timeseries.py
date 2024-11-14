@@ -111,7 +111,7 @@ def xr_dataset_to_timeseries(
                 len(xr_dataset[var].x) * len(xr_dataset[var].y) - xr_dataset.aoi_pixels
             )
             nans_inside_aoi = nans - out_of_aoi_pixels
-            df["aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
+            df[var + "_aoi_nan_percentage"] = nans_inside_aoi / xr_dataset.aoi_pixels
 
     return df
 
@@ -148,9 +148,9 @@ def _adjust_sample_size(xr_dataset: xr.Dataset, sample_n: float) -> float:
     if resampling_ratio > 1:
         sample_n = sample_n / pixel_multiplier
 
-        sample_n[
-            sample_n < 1
-        ] = 1  # with small areas the adjusted sample_n might be < 1
+        sample_n[sample_n < 1] = (
+            1  # with small areas the adjusted sample_n might be < 1
+        )
     return sample_n
 
 
