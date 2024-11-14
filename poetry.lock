@@ -374,53 +374,6 @@ testing = ["covdefaults (>=2.3)", "coverage (>=7.6.1)", "diff-cover (>=9.2)", "p
 typing = ["typing-extensions (>=4.12.2)"]
 
 [[package]]
-name = "fiona"
-version = "1.10.1"
-description = "Fiona reads and writes spatial data files"
-optional = false
-python-versions = ">=3.8"
-files = [
-    {file = "fiona-1.10.1-cp310-cp310-macosx_10_15_x86_64.whl", hash = "sha256:6e2a94beebda24e5db8c3573fe36110d474d4a12fac0264a3e083c75e9d63829"},
-    {file = "fiona-1.10.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fc7366f99bdc18ec99441b9e50246fdf5e72923dc9cbb00267b2bf28edd142ba"},
-    {file = "fiona-1.10.1-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:8c32f424b0641c79f4036b96c2e80322fb181b4e415c8cd02d182baef55e6730"},
-    {file = "fiona-1.10.1-cp310-cp310-win_amd64.whl", hash = "sha256:9a67bd88918e87d64168bc9c00d9816d8bb07353594b5ce6c57252979d5dc86e"},
-    {file = "fiona-1.10.1-cp311-cp311-macosx_10_15_x86_64.whl", hash = "sha256:98fe556058b370da07a84f6537c286f87eb4af2343d155fbd3fba5d38ac17ed7"},
-    {file = "fiona-1.10.1-cp311-cp311-macosx_11_0_arm64.whl", hash = "sha256:be29044d4aeebae92944b738160dc5f9afc4cdf04f551d59e803c5b910e17520"},
-    {file = "fiona-1.10.1-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:94bd3d448f09f85439e4b77c38b9de1aebe3eef24acc72bd631f75171cdfde51"},
-    {file = "fiona-1.10.1-cp311-cp311-win_amd64.whl", hash = "sha256:30594c0cd8682c43fd01e7cdbe000f94540f8fa3b7cb5901e805c88c4ff2058b"},
-    {file = "fiona-1.10.1-cp312-cp312-macosx_10_15_x86_64.whl", hash = "sha256:7338b8c68beb7934bde4ec9f49eb5044e5e484b92d940bc3ec27defdb2b06c67"},
-    {file = "fiona-1.10.1-cp312-cp312-macosx_11_0_arm64.whl", hash = "sha256:8c77fcfd3cdb0d3c97237965f8c60d1696a64923deeeb2d0b9810286cbe25911"},
-    {file = "fiona-1.10.1-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:537872cbc9bda7fcdf73851c91bc5338fca2b502c4c17049ccecaa13cde1f18f"},
-    {file = "fiona-1.10.1-cp312-cp312-win_amd64.whl", hash = "sha256:41cde2c52c614457e9094ea44b0d30483540789e62fe0fa758c2a2963e980817"},
-    {file = "fiona-1.10.1-cp313-cp313-macosx_10_15_x86_64.whl", hash = "sha256:a00b05935c9900678b2ca660026b39efc4e4b916983915d595964eb381763ae7"},
-    {file = "fiona-1.10.1-cp313-cp313-macosx_11_0_arm64.whl", hash = "sha256:f78b781d5bcbbeeddf1d52712f33458775dbb9fd1b2a39882c83618348dd730f"},
-    {file = "fiona-1.10.1-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:29ceeb38e3cd30d91d68858d0817a1bb0c4f96340d334db4b16a99edb0902d35"},
-    {file = "fiona-1.10.1-cp313-cp313-win_amd64.whl", hash = "sha256:15751c90e29cee1e01fcfedf42ab85987e32f0b593cf98d88ed52199ef5ca623"},
-    {file = "fiona-1.10.1-cp38-cp38-macosx_10_15_x86_64.whl", hash = "sha256:6f1242f872dc33d3b4269dcaebf1838a359f9097e1cc848b0e11367bce010e4d"},
-    {file = "fiona-1.10.1-cp38-cp38-macosx_11_0_arm64.whl", hash = "sha256:65308b7a7e57fcc533de8a5855b0fce798faabc736d1340192dd8673ff61bc4e"},
-    {file = "fiona-1.10.1-cp38-cp38-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:632bc146355af5ff0d77e34ebd1be5072d623b4aedb754b94a3d8c356c4545ac"},
-    {file = "fiona-1.10.1-cp38-cp38-win_amd64.whl", hash = "sha256:b7b4c3c97b1d64a1b3321577e9edaebbd36b64006e278f225f300c497cc87c35"},
-    {file = "fiona-1.10.1-cp39-cp39-macosx_10_15_x86_64.whl", hash = "sha256:b62aa8d5a0981bd33d81c247219b1eaa1e655e0a0682b3a4759fccc40954bb30"},
-    {file = "fiona-1.10.1-cp39-cp39-macosx_11_0_arm64.whl", hash = "sha256:f4b19cb5bd22443ef439b39239272349023556994242a8f953a0147684e1c47f"},
-    {file = "fiona-1.10.1-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:fa7e7e5ad252ef29905384bf92e7d14dd5374584b525632652c2ab8925304670"},
-    {file = "fiona-1.10.1-cp39-cp39-win_amd64.whl", hash = "sha256:4e82d18acbe55230e9cf8ede2a836d99ea96b7c0cc7d2b8b993e6c9f0ac14dc2"},
-    {file = "fiona-1.10.1.tar.gz", hash = "sha256:b00ae357669460c6491caba29c2022ff0acfcbde86a95361ea8ff5cd14a86b68"},
-]
-
-[package.dependencies]
-attrs = ">=19.2.0"
-certifi = "*"
-click = ">=8.0,<9.0"
-click-plugins = ">=1.0"
-cligj = ">=0.5"
-
-[package.extras]
-all = ["fiona[calc,s3,test]"]
-calc = ["pyparsing", "shapely"]
-s3 = ["boto3 (>=1.3.1)"]
-test = ["aiohttp", "fiona[s3]", "fsspec", "pytest (>=7)", "pytest-cov", "pytz"]
-
-[[package]]
 name = "flake8"
 version = "7.1.1"
 description = "the modular source code checker: pep8 pyflakes and co"
@@ -556,29 +509,6 @@ six = "*"
 
 [package.extras]
 grpc = ["gax-google-logging-v2 (>=0.8.0,<0.9dev)", "gax-google-pubsub-v1 (>=0.8.0,<0.9dev)", "google-gax (>=0.12.3,<0.13dev)", "grpc-google-logging-v2 (>=0.8.0,<0.9dev)", "grpc-google-pubsub-v1 (>=0.8.0,<0.9dev)", "grpcio (>=1.0rc1)"]
-
-[[package]]
-name = "geopandas"
-version = "1.0.1"
-description = "Geographic pandas extensions"
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "geopandas-1.0.1-py3-none-any.whl", hash = "sha256:01e147d9420cc374d26f51fc23716ac307f32b49406e4bd8462c07e82ed1d3d6"},
-    {file = "geopandas-1.0.1.tar.gz", hash = "sha256:b8bf70a5534588205b7a56646e2082fb1de9a03599651b3d80c99ea4c2ca08ab"},
-]
-
-[package.dependencies]
-numpy = ">=1.22"
-packaging = "*"
-pandas = ">=1.4.0"
-pyogrio = ">=0.7.2"
-pyproj = ">=3.3.0"
-shapely = ">=2.0.0"
-
-[package.extras]
-all = ["GeoAlchemy2", "SQLAlchemy (>=1.3)", "folium", "geopy", "mapclassify", "matplotlib (>=3.5.0)", "psycopg-binary (>=3.1.0)", "pyarrow (>=8.0.0)", "xyzservices"]
-dev = ["black", "codecov", "pre-commit", "pytest (>=3.1.0)", "pytest-cov", "pytest-xdist"]
 
 [[package]]
 name = "google-api-core"
@@ -1474,57 +1404,6 @@ files = [
 windows-terminal = ["colorama (>=0.4.6)"]
 
 [[package]]
-name = "pyogrio"
-version = "0.10.0"
-description = "Vectorized spatial vector file format I/O using GDAL/OGR"
-optional = false
-python-versions = ">=3.9"
-files = [
-    {file = "pyogrio-0.10.0-cp310-cp310-macosx_12_0_arm64.whl", hash = "sha256:046eeeae12a03a3ebc3dc5ff5a87664e4f5fc0a4fb1ea5d5c45d547fa941072b"},
-    {file = "pyogrio-0.10.0-cp310-cp310-macosx_12_0_x86_64.whl", hash = "sha256:44380f4d9245c776f432526e29ce4d29238aea26adad991803c4f453474f51d3"},
-    {file = "pyogrio-0.10.0-cp310-cp310-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:14fd3b72b4e2dc59e264607b265c742b0c5ec2ea9e748b115f742381b28dd373"},
-    {file = "pyogrio-0.10.0-cp310-cp310-manylinux_2_28_aarch64.whl", hash = "sha256:1fea7892f4633cab04d13563e47ec2e87dc2b5cd71b9546018d123184528c151"},
-    {file = "pyogrio-0.10.0-cp310-cp310-manylinux_2_28_x86_64.whl", hash = "sha256:3539596a76eb8a9d166d6f9d3f36731a8c5bd5c43901209d89dc66b9dc00f079"},
-    {file = "pyogrio-0.10.0-cp310-cp310-win_amd64.whl", hash = "sha256:eac90b2501656892c63bc500c12e71f3dbf7d66ddc5a7fb05cd480d25d1b7022"},
-    {file = "pyogrio-0.10.0-cp311-cp311-macosx_12_0_arm64.whl", hash = "sha256:5b1a51431a27a1cb3e4e19558939c1423106e06e7b67d6285f4fba9c2d0a91b9"},
-    {file = "pyogrio-0.10.0-cp311-cp311-macosx_12_0_x86_64.whl", hash = "sha256:216d69cd77b2b4a0c9d7d449bc239f8b77f3d73f4a05d9c738a0745b236902d8"},
-    {file = "pyogrio-0.10.0-cp311-cp311-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:a2f0b75f0077ce33256aec6278c2a9c3b79bf0637ddf4f93d3ab2609f0501d96"},
-    {file = "pyogrio-0.10.0-cp311-cp311-manylinux_2_28_aarch64.whl", hash = "sha256:0a47f702d29808c557d2ebea8542c23903f021eae44e16838adef2ab4281c71b"},
-    {file = "pyogrio-0.10.0-cp311-cp311-manylinux_2_28_x86_64.whl", hash = "sha256:11e6c71d12da6b445e77d0fc0198db1bd35a77e03a0685e45338cbab9ce02add"},
-    {file = "pyogrio-0.10.0-cp311-cp311-win_amd64.whl", hash = "sha256:d0d74e91a9c0ff2f9abe01b556ff663977193b2d6922208406172d0fc833beff"},
-    {file = "pyogrio-0.10.0-cp312-cp312-macosx_12_0_arm64.whl", hash = "sha256:2d6558b180e020f71ab7aa7f82d592ed3305c9f698d98f6d0a4637ec7a84c4ce"},
-    {file = "pyogrio-0.10.0-cp312-cp312-macosx_12_0_x86_64.whl", hash = "sha256:a99102037eead8ba491bc57825c1e395ee31c9956d7bff7b4a9e4fdbff3a13c2"},
-    {file = "pyogrio-0.10.0-cp312-cp312-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3a4c373281d7cbf560c5b61f8f3c7442103ad7f1c7ac4ef3a84572ed7a5dd2f6"},
-    {file = "pyogrio-0.10.0-cp312-cp312-manylinux_2_28_aarch64.whl", hash = "sha256:19f18411bdf836d24cdc08b9337eb3ec415e4ac4086ba64516b36b73a2e88622"},
-    {file = "pyogrio-0.10.0-cp312-cp312-manylinux_2_28_x86_64.whl", hash = "sha256:1abbcdd9876f30bebf1df8a0273f6cdeb29d03259290008275c7fddebe139f20"},
-    {file = "pyogrio-0.10.0-cp312-cp312-win_amd64.whl", hash = "sha256:2a3e09839590d71ff832aa95c4f23fa00a2c63c3de82c1fbd4fb8d265792acfc"},
-    {file = "pyogrio-0.10.0-cp313-cp313-macosx_12_0_arm64.whl", hash = "sha256:c90478209537a31dcc65664a87a04c094bb0e08efe502908a6682b8cec0259bf"},
-    {file = "pyogrio-0.10.0-cp313-cp313-macosx_12_0_x86_64.whl", hash = "sha256:fec45e1963b7058e5a1aa98598aed07c0858512c833d6aad2c672c3ec98bbf04"},
-    {file = "pyogrio-0.10.0-cp313-cp313-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:28cb139f8a5d0365ede602230104b407ae52bb6b55173c8d5a35424d28c4a2c5"},
-    {file = "pyogrio-0.10.0-cp313-cp313-manylinux_2_28_aarch64.whl", hash = "sha256:cea0187fcc2d574e52af8cfab041fa0a7ad71d5ef6b94b49a3f3d2a04534a27e"},
-    {file = "pyogrio-0.10.0-cp313-cp313-manylinux_2_28_x86_64.whl", hash = "sha256:7c02b207ea8cf09c501ea3e95d29152781a00d3c32267286bc36fa457c332205"},
-    {file = "pyogrio-0.10.0-cp313-cp313-win_amd64.whl", hash = "sha256:02e54bcfb305af75f829044b0045f74de31b77c2d6546f7aaf96822066147848"},
-    {file = "pyogrio-0.10.0-cp39-cp39-macosx_12_0_arm64.whl", hash = "sha256:ea96a1338ed7991735b955d3f84ad5f71b3bc070b6a7a42449941aedecc71768"},
-    {file = "pyogrio-0.10.0-cp39-cp39-macosx_12_0_x86_64.whl", hash = "sha256:32d349600561459791a43f528a92f3e9343a59bdc9bc30b1be9376f0b80cbf16"},
-    {file = "pyogrio-0.10.0-cp39-cp39-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:82f7bd6a87bd2e9484bcb4c87ab94eee4c2f573ad148707431c8b341d7f13d99"},
-    {file = "pyogrio-0.10.0-cp39-cp39-manylinux_2_28_aarch64.whl", hash = "sha256:6166ae81462c257ed8e151c404e316642703813cf771c95ef8e11dcdf2581e47"},
-    {file = "pyogrio-0.10.0-cp39-cp39-manylinux_2_28_x86_64.whl", hash = "sha256:22d57495e835fe51b88da43dfbda606c07e1f6c3b849af0c3cfc18e17467641c"},
-    {file = "pyogrio-0.10.0-cp39-cp39-win_amd64.whl", hash = "sha256:eea82171bfc07fc778b8dc87b0cdc9ac06c389bc56b0c0b6f34bf9e45fb78c0e"},
-    {file = "pyogrio-0.10.0.tar.gz", hash = "sha256:ec051cb568324de878828fae96379b71858933413e185148acb6c162851ab23c"},
-]
-
-[package.dependencies]
-certifi = "*"
-numpy = "*"
-packaging = "*"
-
-[package.extras]
-benchmark = ["pytest-benchmark"]
-dev = ["cython"]
-geopandas = ["geopandas"]
-test = ["pytest", "pytest-cov"]
-
-[[package]]
 name = "pyparsing"
 version = "3.2.0"
 description = "pyparsing module - Classes and methods to define and execute parsing grammars"
@@ -2214,4 +2093,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = ">=3.10,<4"
-content-hash = "d8e6411b9ed7a354d6a000659f0a0d9b70cf3ad324a1af3db9db852fdb42af90"
+content-hash = "a106ca2d9e26618a2935726dd11ac7185048bfa52ddc91f05c7497c0c4518232"
