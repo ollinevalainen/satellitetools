@@ -1,6 +1,6 @@
 [![DOI](https://zenodo.org/badge/270676132.svg)](https://zenodo.org/badge/latestdoi/270676132)
 
-# satellitetools
+# satellitetools 🛰️ 
 This package provide methods to get Sentinel-2 L2A data from Google Earth Engine 
 (https://developers.google.com/earth-engine/) or from cloud-optimized geotiffs 
 maintained by Element84 from AWS Open data registry 
@@ -19,25 +19,25 @@ free to contact me in case you want more information about this package.
  ATBD: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
 
  ## Major changes from merging develop-2024-update to develop (develop is now the master)! ##
- **Breaking changes:**
+ **Breaking changes:** ⚠️
 
-    * Renamed xrtools.py to timeseries.py
-    * RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
-    * Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
-    * The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
+* Renamed xrtools.py to timeseries.py
+* RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
+* Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
+* The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
 
-**New features:**
+**New features:** 🔧
 
-    * Refactored and made codes more object-oriented and modular:
-    * There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
-        - GEESentinel2DataCollection
-        - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
-    * The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
-    * Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
-    * Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
-    * Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
-    * Added tests.
-    * Improved docstrings, added examples and updated README.
+* Refactored and made codes more object-oriented and modular:
+* There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
+    - GEESentinel2DataCollection
+    - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
+* The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
+* Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
+* Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
+* Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
+* Added tests.
+* Improved docstrings, added examples and updated README.
 
 
 ## Installation ##
