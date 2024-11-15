@@ -200,7 +200,7 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
         """Search for Sentinel-2 items from AWS Open data registry."""
 
         print(
-            "Searching S2 data from {} to {} for area {}".format(
+            "Searching S2 data from {} to {} for {}".format(
                 self.req_params.datestart, self.req_params.dateend, self.aoi.name
             )
         )
@@ -212,17 +212,18 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
             collection=EarthSearchCollection.SENTINEL2_C1_L2A,
         ).get_items()
 
-        if items:
-            self.s2_items = [AWSSentinel2Item(item) for item in items]
-            self.sort_s2_items()
+        self.s2_items = [AWSSentinel2Item(item) for item in items]
+        self.sort_s2_items()
 
     def get_quality_info(self):
         """Get quality information for Sentinel-2 items."""
 
         # Check that s2_items are available
-        if self.s2_items is None:
-            raise ValueError("No Sentinel2 items searched or found.")
+        if not self.s2_items:
+            print("No Sentinel-2 items available.")
+            return None
 
+        print("Computing S2 quality information...")
         if self.multiprocessing is not None:
             self.s2_items = _multiprocess_get_scl_data(
                 self.s2_items,
@@ -243,15 +244,11 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
     def get_s2_data(self):
         """Get Sentinel-2 data."""
         # Check that s2_items are available
-        if self.s2_items is None:
-            raise ValueError("No Sentinel2 items searched or found.")
-
-        if len(self.s2_items) == 0:
-            print("No data to be retrieved.")
+        if not self.check_s2_items_exist():
             return None
 
         self.sort_s2_items()
-
+        print(f"Retrieving S2 data from {len(self.s2_items)} products...")
         if self.multiprocessing is not None:
             self.s2_items = _multiprocess_get_item_s2_data(
                 self.s2_items,

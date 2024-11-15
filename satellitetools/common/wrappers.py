@@ -59,13 +59,13 @@ def get_s2_qi_and_data(
     else:
         raise ValueError(f"Unknown datasource {req_params.datasource}")
 
-    print("Computing S2 quality information...")
     data_collection.get_quality_info()
-    data_collection.filter_s2_items(qi_threshold, qi_filter)
-
-    if len(data_collection.s2_items) == 0:
-        print("No new observations for area %s" % aoi.name)
+    if not data_collection.s2_items:
+        return None, None
     else:
+        data_collection.filter_s2_items(qi_threshold, qi_filter)
+
+    if data_collection.check_s2_items_exist():
         data_collection.get_s2_data()
         data_collection.data_to_xarray()
 

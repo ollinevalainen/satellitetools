@@ -4,7 +4,7 @@ import satellitetools.common.timeseries as timeseries
 import satellitetools.common.wrappers as wrappers
 import satellitetools.gee as gee
 from satellitetools.common.classes import AOI, DataSource
-from satellitetools.common.sentinel2 import S2Band, Sentinel2RequestParams
+from satellitetools.common.sentinel2 import S2Band, SCLClass, Sentinel2RequestParams
 
 __all__ = [
     "aws",
@@ -16,4 +16,5 @@ __all__ = [
     "DataSource",
     "S2Band",
     "Sentinel2RequestParams",
+    "SCLClass",
 ]

@@ -24,6 +24,7 @@ free to contact me in case you want more information about this package.
     * Renamed xrtools.py to timeseries.py
     * RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
     * Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
+    * The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
 
 **New features:**
 

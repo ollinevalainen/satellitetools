@@ -499,8 +499,25 @@ class Sentinel2DataCollection:
             f"Sentinel2RequestParams={self.req_params})"
         )
 
+    def check_s2_items_exist(self) -> bool:
+        if self.s2_items is None:
+            print("No Sentinel-2 items searched (s2_items=None).")
+            return False
+        elif len(self.s2_items) == 0:
+            print(
+                "No Sentinel-2 items found for the time period or "
+                "left after filtering (s2_items=[])."
+            )
+            return False
+        return True
+
     def create_quality_information(self):
         """Create quality information dataframe."""
+        # Check that s2_items are available
+        if not self.s2_items:
+            print("No Sentinel-2 items to create quality information.")
+            return None
+
         qi_dicts = []
         for s2_item in self.s2_items:
             qi_dict = s2_item.metadata.__dict__
@@ -530,6 +547,9 @@ class Sentinel2DataCollection:
             Tile ID.
 
         """
+        if not self.s2_items:
+            print("No Sentinel-2 items to filter by tile.")
+            return None
 
         if tileid is not None:
             self.s2_items = [
@@ -562,6 +582,10 @@ class Sentinel2DataCollection:
             Quality indicator filter.
 
         """
+        if self.quality_information is None:
+            print("Quality information not available for filtering.")
+            return None
+
         filtered_qi = filter_s2_qi_dataframe(
             self.quality_information, qi_threshold, qi_filter
         )
@@ -587,8 +611,15 @@ class Sentinel2DataCollection:
             Quality indicator filter.
 
         """
+        if not self.s2_items:
+            print("No Sentinel-2 items to filter.")
+            return None
+
         # Filter by quality information
         self.filter_s2_items_by_quality_information(qi_threshold, qi_filter)
+        if not self.s2_items:
+            print("No data passing the quality filter.")
+            return None
 
         # Filter to specified tile or use the first tile
         self.filter_s2_items_by_tile()
@@ -599,6 +630,10 @@ class Sentinel2DataCollection:
 
     def data_to_xarray(self):
         """Convert data to xarray dataset."""
+
+        # Check that s2_items are available
+        if not self.check_s2_items_exist():
+            return None
 
         # Sort s2_items by acquisition time
         self.sort_s2_items()

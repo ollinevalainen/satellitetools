@@ -50,13 +50,65 @@ class TestWrapper:
         assert not df.empty
         assert ds is not None
 
+    def test_wrapper_with_aws_empty_search(self):
+        req_params = sattools.Sentinel2RequestParams(
+            "2020-06-02", "2020-06-03", sattools.DataSource.AWS, test_bands
+        )
+        df, ds = sattools.wrappers.get_s2_qi_and_data(
+            aoi=test_AOI,
+            req_params=req_params,
+            qi_threshold=0.02,
+            qi_filter=S2_FILTER1,
+        )
+        assert df is None
+        assert ds is None
+
+    def test_wrapper_with_aws_filter_all(self):
+        req_params = sattools.Sentinel2RequestParams(
+            "2020-06-01", "2020-06-15", sattools.DataSource.AWS, test_bands
+        )
+        df, ds = sattools.wrappers.get_s2_qi_and_data(
+            aoi=test_AOI,
+            req_params=req_params,
+            qi_threshold=0,
+            qi_filter=[c for c in sattools.SCLClass],
+            multiprocessing=4,
+        )
+        assert df is not None or not df.empty
+        assert ds is None
+
+    def test_wrapper_with_gee_empty_search(self):
+        initialize_gee()
+
+        req_params = sattools.Sentinel2RequestParams(
+            "2020-06-02", "2020-06-03", sattools.DataSource.GEE, test_bands
+        )
+        df, ds = sattools.wrappers.get_s2_qi_and_data(
+            aoi=test_AOI,
+            req_params=req_params,
+            qi_threshold=0.02,
+            qi_filter=S2_FILTER1,
+        )
+        assert df is None
+        assert ds is None
+
+    def test_wrapper_with_gee_filter_all(self):
+        initialize_gee()
+        req_params = sattools.Sentinel2RequestParams(
+            "2020-06-01", "2020-06-15", sattools.DataSource.GEE, test_bands
+        )
+        df, ds = sattools.wrappers.get_s2_qi_and_data(
+            aoi=test_AOI,
+            req_params=req_params,
+            qi_threshold=0,
+            qi_filter=[c for c in sattools.SCLClass],
+            multiprocessing=4,
+        )
+        assert df is not None or not df.empty
+        assert ds is None
+
     def test_wrapper_with_gee(self):
-        import os
-
-        import ee
-
-        ee_project = os.environ.get("EE_PROJECT_PYTEST")
-        ee.Initialize(project=ee_project)
+        initialize_gee()
         req_params = sattools.Sentinel2RequestParams(
             test_datestart, test_dateend, sattools.DataSource.GEE, test_bands
         )
@@ -69,3 +121,12 @@ class TestWrapper:
         assert df is not None
         assert not df.empty
         assert ds is not None
+
+
+def initialize_gee():
+    import os
+
+    import ee
+
+    ee_project = os.environ.get("EE_PROJECT_PYTEST")
+    ee.Initialize(project=ee_project)

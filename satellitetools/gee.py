@@ -270,12 +270,19 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         multi_data_collection = MultiGEESentinel2DataCollection(
             [self.aoi], self.req_params
         )
+        print(
+            "Searching and computing quality information for S2 data "
+            "from {} to {} for {}".format(
+                self.req_params.datestart, self.req_params.dateend, self.aoi.name
+            )
+        )
         multi_data_collection.ee_get_s2_quality_info()
 
+        self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
         self.quality_information = multi_data_collection.data_collections[
             self.aoi.name
         ].quality_information
-        self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
+        print(f"Found {len(self.s2_items)} items.")
 
     def get_s2_data(self):
         """Get S2 data (level L2A, bottom of atmosphere data) from GEE."""
@@ -286,6 +293,9 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
             self.quality_information
         )
         multi_data_collection.data_collections[self.aoi.name].s2_items = self.s2_items
+
+        if self.s2_items:
+            print("Retrieving data...")
         multi_data_collection.ee_get_s2_data()
         self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
 
@@ -293,8 +303,14 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         multi_data_collection = MultiGEESentinel2DataCollection(
             [self.aoi], self.req_params
         )
+        print(
+            "Searching S2 data from {} to {} for area {}".format(
+                self.req_params.datestart, self.req_params.dateend, self.aoi.name
+            )
+        )
         multi_data_collection.ee_search_s2_products()
         self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
+        print(f"Found {len(self.s2_items)} items.")
 
 
 class MultiGEESentinel2DataCollection:
