@@ -6,8 +6,17 @@ Created on Tue Mar 16 10:53:15 2021
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
 from dataclasses import dataclass
-from enum import Enum
 from typing import Dict, List, Optional
+
+try:
+    # breaking change introduced in python 3.11
+    from enum import Enum, StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 import numpy as np
 import pandas as pd
@@ -20,7 +29,7 @@ SCL_NODATA = 99
 
 
 # Use GEE band naming
-class S2Band(str, Enum):
+class S2Band(StrEnum):
     """Sentinel-2 bands."""
 
     B1 = "B1"

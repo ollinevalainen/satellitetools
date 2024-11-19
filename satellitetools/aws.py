@@ -12,10 +12,19 @@ Created on Fri Mar 12 15:47:31 2021
 import datetime
 import urllib
 from collections import Counter
-from enum import Enum
 from multiprocessing import Pool
 from typing import Dict, List, Optional, Union
 from warnings import warn
+
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 import numpy as np
 import pandas as pd
@@ -46,7 +55,7 @@ from satellitetools.common.vector import (
 BUFFER_MULTIPLIER = 8
 
 
-class EarthSearchCollection(str, Enum):
+class EarthSearchCollection(StrEnum):
     SENTINEL2_C1_L2A = "sentinel-2-c1-l2a"
     SENTINEL2_L2A = "sentinel-2-l2a"
 

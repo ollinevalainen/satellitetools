@@ -6,13 +6,22 @@ Common classes for gee and aws_cog process.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 Created on Tue Mar 16 10:45:05 2021
 """
-from enum import Enum
 from typing import Union
+
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 from shapely.geometry import Polygon
 
 
-class DataSource(str, Enum):
+class DataSource(StrEnum):
     """Data source for the data request."""
 
     GEE = "gee"

@@ -23,7 +23,16 @@ Convex hull input checking currently disabled. It's computationally slow and
  info/classification and hope averaging removes some bad pixels. 
 """  # noqa
 import os
-from enum import Enum
+
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 import numpy as np
 import xarray as xr
@@ -31,13 +40,13 @@ import xarray as xr
 from satellitetools.common.sentinel2 import S2Band
 
 
-class VegetationIndex(str, Enum):
+class VegetationIndex(StrEnum):
     NDVI = "ndvi"
     CI_RED_EDGE = "ci_red_edge"
     GCC = "gcc"
 
 
-class BiophysVariable(str, Enum):
+class BiophysVariable(StrEnum):
     FAPAR = "fapar"
     FCOVER = "fcover"
     LAI = "lai"
