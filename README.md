@@ -258,6 +258,7 @@ processs and some bad data acquisition dates might pass the filter.
     - Include example notebook in the documentation
     - Examples to docstrings
 * Improve tests and start measuring coverage
+    - Testing automation for multiple python versions
 * Plan branching strategy with CI/CD
     - Add changelog
 * Refactor ee_* functions in gee.py. Tahy have a lot of repetition.
