@@ -4,4 +4,6 @@
 __pycache__
 .vscode
 *.DS_Store
+.nox/*
+.python-version
 
