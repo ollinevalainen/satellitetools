@@ -6,8 +6,17 @@ Created on Tue Mar 16 11:36:13 2021
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
-from enum import Enum
 from typing import List, Union
+
+try:
+    # breaking change introduced in python 3.11
+    from enum import StrEnum
+except ImportError:
+    from enum import Enum
+
+    class StrEnum(str, Enum):
+        pass
+
 
 import numpy as np
 import pandas as pd
@@ -20,7 +29,7 @@ from satellitetools.biophys.biophys import (
 )
 
 
-class ConfidenceLevel(str, Enum):
+class ConfidenceLevel(StrEnum):
     """Confidence level for calculating the confidence interval bounds."""
 
     C90 = "90"
