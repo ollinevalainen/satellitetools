@@ -253,20 +253,22 @@ processs and some bad data acquisition dates might pass the filter.
 
 ## TODO ##
 **Realistic:**
-* Release 2.0.0 and publish to PyPi
-* Documentation with sphinx and push to read the docs:
-    - Include example notebook in the documentation
-    - Examples to docstrings
-* Improve tests and start measuring coverage
-    - Testing automation for multiple python versions
-* Plan branching strategy with CI/CD
-    - Add changelog
-* Refactor ee_* functions in gee.py. Tahy have a lot of repetition.
-* From print to logging
-* Calculate vegetation indices directly in GEE cloud and return only timeseries
+
+- [ ] Release 2.0.0 and publish to PyPi
+- [ ] Documentation with sphinx and push to read the docs:
+- [ ] Include example notebook in the documentation
+- [ ] Examples to docstrings
+- [ ] Improve tests and start measuring coverage
+- [x] Testing automation for multiple python versions, commit: b4dae2f38bea9faa5a41bda3bea6990d372a9e0e
+- [ ] Plan branching strategy with CI/CD
+- [ ] Add changelog
+- [ ] Refactor ee_* functions in gee.py. Tahy have a lot of repetition.
+- [ ] From print to logging
+- [ ] Calculate vegetation indices directly in GEE cloud and return only timeseries
+
 **Wishful thinking:**
-* Point-based AOI (currently AOI must be a polygon)
-* Add Landsat data support
-* Add Sentinel-1 data support
-* Large spatial scale data retrieval from AWS: yield daily xr_datasets
+- [ ] Point-based AOI (currently AOI must be a polygon)
+- [ ] Add Landsat data support
+- [ ] Add Sentinel-1 data support
+- [ ] Large spatial scale data retrieval from AWS: yield daily xr_datasets
     - currently all data is fetched first to memory
