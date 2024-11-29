@@ -366,6 +366,7 @@ class MultiGEESentinel2DataCollection:
                 ee.ImageCollection(GEE_DATASET)
                 .filterBounds(area)
                 .filterDate(req_params.datestart, req_params.dateend)
+                .filter(ee.Filter.contains(".geo", area))
                 .select([GEE_SCL_BAND])
             )
 
@@ -435,6 +436,7 @@ class MultiGEESentinel2DataCollection:
                 ee.ImageCollection(GEE_DATASET)
                 .filterBounds(area)
                 .filterDate(req_params.datestart, req_params.dateend)
+                .filter(ee.Filter.contains(".geo", area))
                 .select([GEE_SCL_BAND])
             )
 
@@ -547,6 +549,7 @@ class MultiGEESentinel2DataCollection:
                 ee.ImageCollection.fromImages(feature.get("image_list"))
                 .filterBounds(geom)
                 .filterDate(datestart, dateend)
+                .filter(ee.Filter.contains(".geo", geom))
                 .select(bands)
             )
 
