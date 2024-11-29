@@ -738,8 +738,8 @@ class Sentinel2DataCollection:
         coords = {
             "time": acquisition_times,
             "band": bands_str,
-            "y": np.float64(self.s2_items[0].coordinates[bands[0]].y),
-            "x": np.float64(self.s2_items[0].coordinates[bands[0]].x),
+            "y": self.s2_items[0].coordinates[bands[0]].y.astype(np.float64),
+            "x": self.s2_items[0].coordinates[bands[0]].x.astype(np.float64),
         }
 
         ds = xr.Dataset(

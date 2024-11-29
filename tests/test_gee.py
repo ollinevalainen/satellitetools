@@ -174,3 +174,34 @@ class TestGEE:
         assert s2_data_collection.s2_items is not None
         assert all([b in s2_data_collection.s2_items[0].data for b in bands])
         s2_data_collection.data_to_xarray()
+
+    def test_aoi_with_y_len_one_pixel(self):
+        aoi_coords = [
+            (0.7928222017683817, 42.63188925867777),
+            (0.7932474148375968, 42.63183255500702),
+            (0.7935161231648058, 42.63207447646401),
+            (0.7933808033796685, 42.63216285078755),
+            (0.7931923944390995, 42.63208507482328),
+            (0.7929224148153224, 42.63210705264266),
+            (0.7927627009200733, 42.6320269199325),
+            (0.7924680675306872, 42.63195239434005),
+            (0.7928222017683817, 42.63188925867777),
+        ]
+        aoi_polygon = Polygon(aoi_coords)
+        aoi = sattools.AOI("problematic", aoi_polygon, "EPSG:4326")
+        date_start = "2018-01-01"
+        date_end = "2018-12-31"
+        data_source = sattools.DataSource.GEE
+        bands = sattools.S2Band.get_10m_to_20m_bands()
+        request = sattools.Sentinel2RequestParams(
+            date_start,
+            date_end,
+            data_source,
+            bands=bands,
+            target_gsd=20,
+        )
+        s2_data_collection = sattools.gee.GEESentinel2DataCollection(aoi, request)
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        s2_data_collection.data_to_xarray()
