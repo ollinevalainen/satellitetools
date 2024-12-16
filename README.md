@@ -254,7 +254,7 @@ processs and some bad data acquisition dates might pass the filter.
 **Realistic:**
 
 - [ ] Release 2.0.0 and publish to PyPi
-- [ ] Documentation with sphinx and push to read the docs
+- [ ] Push docs to Read the docs
 - [ ] Include example notebook in the documentation
 - [ ] Examples to docstrings
 - [ ] Improve tests and start measuring coverage
