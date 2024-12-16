@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 11:36:13 2021
+Functions for timeseries data handling.
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 

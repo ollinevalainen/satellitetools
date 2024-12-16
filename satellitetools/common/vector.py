@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 11:23:20 2021
+Functions for vector data handling.
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
+
 """
 from typing import Tuple
 

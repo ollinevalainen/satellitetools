@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 10:53:15 2021
+Classes for handling Sentinel-2 data.
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
+
 """
 from dataclasses import dataclass
 from typing import Dict, List, Optional
@@ -54,6 +55,7 @@ class S2Band(StrEnum):
         ----------------
         str
             Band name in AWS.
+
         """
         band_name_in_aws = S2_BANDS_GEE_TO_AWS[self.value]
         return band_name_in_aws
@@ -65,6 +67,7 @@ class S2Band(StrEnum):
         ----------------
         str
             Band name in GEE.
+
         """
         return self.value
 
@@ -76,6 +79,7 @@ class S2Band(StrEnum):
         ----------------
         List[S2Band]
             List of 10-20 m bands.
+
         """
         return [S2Band(b) for b in S2_BANDS_10_20_GEE]
 
@@ -87,6 +91,7 @@ class S2Band(StrEnum):
         ----------------
         List[S2Band]
             List of all bands.
+
         """
         return [b for b in S2Band]
 
@@ -395,15 +400,15 @@ class Coordinates:
 
     Attributes:
     ----------------
-    x : list
+    x : list[float]
         List of x coordinates.
-    y : list
+    y : list[float]
         List of y coordinates.
 
     """
 
-    x: list
-    y: list
+    x: list[float]
+    y: list[float]
 
 
 class Sentinel2Item:
@@ -433,6 +438,7 @@ class Sentinel2Item:
             Metadata of the data item.
         data : Optional[Dict[S2Band, np.ndarray]]
             Data of the data item.
+
         """
         self.metadata = metadata
         self.data = data if data else {}

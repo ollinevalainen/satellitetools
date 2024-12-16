@@ -1,11 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon May 11 14:34:08 2020
-
-@author: Olli Nevalainen (olli.nevalainen@fmi.fi),
- Finnish Meteorological Institute)
-
-Olli's python implementation of ESA SNAP s2toolbox biophysical processor and
+Python implementation of ESA SNAP s2toolbox biophysical processor and
 computation of vegetation indices.
 See ATBD at https://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf
 And java source code at
@@ -18,9 +13,13 @@ Currently changes out of bounds inputs and outputs to nan (or min or max value
 if output wihtin tolerance). Maybe output flagging information as well ( i.e.
 diffferent flags input and output out of bounds).
 
-Convex hull input checking currently disabled. It's computationally slow and
- not sure of its benefits. Better to filter out bad data based on L2A quality
- info/classification and hope averaging removes some bad pixels. 
+Convex hull input checking currently disabled. It's computationally slow and 
+not sure of its benefits. Better to filter out bad data based on L2A quality 
+info/classification and hope averaging removes some bad pixels. 
+
+@author: Olli Nevalainen,
+ Finnish Meteorological Institute)
+ 
 """  # noqa
 import os
 
@@ -103,6 +102,9 @@ class SNAPBiophysProcessor:
         biophysical bands.
     variable : BiophysVariable
         Biophysical variable to compute.
+    nn_params : dict
+        Neural network parameters.
+
     """
 
     def __init__(self, data_cube: xr.DataArray, variable: BiophysVariable):
@@ -115,6 +117,7 @@ class SNAPBiophysProcessor:
             biophysical bands.
         variable : BiophysVariable
             Biophysical variable to compute.
+
         """
         self.data_cube = data_cube
         self.variable = variable

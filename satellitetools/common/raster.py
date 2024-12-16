@@ -4,7 +4,7 @@
 Functions for raster data handling.
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
-Created on Tue Mar 16 10:45:05 2021
+
 """
 import os
 from typing import Optional, Tuple, Union

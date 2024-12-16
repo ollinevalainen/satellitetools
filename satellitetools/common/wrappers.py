@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-Created on Tue Mar 16 11:05:36 2021
+Wrapper functions for Sentinel-2 data retrieval.
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
+
 """
 from typing import List, Optional, Tuple
 
@@ -47,6 +48,7 @@ def get_s2_qi_and_data(
     ----------------
     Tuple[pd.DataFrame, xr.Dataset]
         Tuple of quality information DataFrame and xarray Dataset.
+
     """
     if req_params.datasource == DataSource.GEE:
         data_collection = GEESentinel2DataCollection(aoi, req_params)

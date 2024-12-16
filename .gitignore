@@ -6,4 +6,4 @@ __pycache__
 *.DS_Store
 .nox/*
 .python-version
-
+doc/build

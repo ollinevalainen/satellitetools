@@ -7,7 +7,6 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
-Created on Fri Mar 12 15:47:31 2021
 """
 import datetime
 import urllib

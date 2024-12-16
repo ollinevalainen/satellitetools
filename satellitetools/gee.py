@@ -3,10 +3,8 @@
 """
 Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
 
-@author: Olli Nevalainen (olli.nevalainen@fmi.fi),
+@author: Olli Nevalainen,
  Finnish Meteorological Institute)
-
-Created on Thu Feb  6 15:24:12 2020
 
 """
 import datetime

@@ -1,44 +1,21 @@
 [![DOI](https://zenodo.org/badge/270676132.svg)](https://zenodo.org/badge/latestdoi/270676132)
 
 # satellitetools 🛰️ 
-This package provide methods to get Sentinel-2 L2A data from Google Earth Engine 
-(https://developers.google.com/earth-engine/) or from cloud-optimized geotiffs 
-maintained by Element84 from AWS Open data registry 
-(https://registry.opendata.aws/sentinel-2-l2a-cogs/, https://github.com/Element84/earth-search).
+This package provides methods to get Sentinel-2 L2A data from Google Earth Engine 
+(<https://developers.google.com/earth-engine/>) or from cloud-optimized geotiffs in AWS Open data registry 
+maintained by Element84 (<https://registry.opendata.aws/sentinel-2-l2a-cogs/>, <https://github.com/Element84/earth-search>).
 
-It has been mainly used in agricultural projects at the Climate System Research unit at 
-the Finnish Meteorological Institute.
-
-The package is at the moment under constant development. 
+This package has been mainly used in agricultural projects at the Climate System Research unit at 
+the Finnish Meteorological Institute. The package is at the moment under constant development. 
 Apologies for the lack of documentation at the moment. Please feel 
 free to contact me in case you want more information about this package.
 
  Package also includes python implementation of ESA's SNAP Biophysical processor v1 
- which can be used to compute biophysical parameters, such as LAI (Original Java code in
-  SNAP here: https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical).
- ATBD: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
+ which can be used to compute biophysical parameters, such as leaf area index (LAI) (Original Java code in SNAP [here](https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical). Algorithm documentation: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
 
- ## Major changes from merging develop-2024-update to develop (develop is now the master)! ##
- **Breaking changes:** ⚠️
+Author: Olli Nevalainen, Finnish Meteorological Institute.
 
-* Renamed xrtools.py to timeseries.py
-* RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
-* Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
-* The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
-
-**New features:** 🔧
-
-* Refactored and made codes more object-oriented and modular:
-* There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
-    - GEESentinel2DataCollection
-    - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
-* The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
-* Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
-* Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
-* Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
-* Added tests.
-* Improved docstrings, added examples and updated README.
-
+Source code at: <https://github.com/ollinevalainen/satellitetools>.
 
 ## Installation ##
 
@@ -48,14 +25,14 @@ pip install git+https://github.com/ollinevalainen/satellitetools.git
 
 ## About Google Earth Engine ##
 Earth Engine must bee authenticated and initialized by the user.
-Guides to authentication: https://developers.google.com/earth-engine/guides/auth
+Guides to authentication: <https://developers.google.com/earth-engine/guides/auth>
 
 Remember GEE's licence terms.
 
 ## About AWS cloud-optimized geotiffs ##
 Currently (2024-10-23) 2022 data is missing still from the sentinel-2-c1-l2a collection
 because ESA has not yet processed them. 2022 is instead fetched from the sentinel-2-l2a
-collection. Follow discussion and issues related to this at: https://github.com/Element84/earth-search/issues 
+collection. Follow discussion and issues related to this at: <https://github.com/Element84/earth-search/issues>.
 
 ## Warning ##
 The biophysical processor implementation in this package does not currently use the 
@@ -249,6 +226,28 @@ purposes.
 The SCL band provided in the S2 level-2A products is automatically generated and it has 
 errors/misclassifications in it. This affects also the accuracy of the filtering 
 processs and some bad data acquisition dates might pass the filter.
+
+
+ ## Major changes from merging develop-2024-update to develop (develop is now the master)! ##
+ **Breaking changes:** ⚠️
+
+* Renamed xrtools.py to timeseries.py
+* RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
+* Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
+* The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
+
+**New features:** 🔧
+
+* Refactored and made codes more object-oriented and modular:
+* There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
+    - GEESentinel2DataCollection
+    - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
+* The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
+* Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
+* Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
+* Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
+* Added tests.
+* Improved docstrings, added examples and updated README.
 
 
 ## TODO ##
