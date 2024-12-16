@@ -255,14 +255,13 @@ processs and some bad data acquisition dates might pass the filter.
 **Realistic:**
 
 - [ ] Release 2.0.0 and publish to PyPi
-- [ ] Documentation with sphinx and push to read the docs:
+- [ ] Documentation with sphinx and push to read the docs
 - [ ] Include example notebook in the documentation
 - [ ] Examples to docstrings
 - [ ] Improve tests and start measuring coverage
-- [x] Testing automation for multiple python versions, commit: b4dae2f38bea9faa5a41bda3bea6990d372a9e0e
 - [ ] Plan branching strategy with CI/CD
 - [ ] Add changelog
-- [ ] Refactor ee_* functions in gee.py. Tahy have a lot of repetition.
+- [ ] Refactor ee_* functions in gee.py. They have a lot of repetition.
 - [ ] From print to logging
 - [ ] Calculate vegetation indices directly in GEE cloud and return only timeseries
 
