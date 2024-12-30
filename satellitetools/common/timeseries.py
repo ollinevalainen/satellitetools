@@ -6,6 +6,7 @@ Functions for timeseries data handling.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
+import logging
 from typing import List, Union
 
 try:
@@ -27,6 +28,8 @@ from satellitetools.biophys.biophys import (
     BiophysVariable,
     VegetationIndex,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class ConfidenceLevel(StrEnum):
@@ -148,7 +151,10 @@ def _adjust_sample_size(xr_dataset: xr.Dataset, sample_n: float) -> float:
         try:
             resampling_ratio = 20 / np.abs(xr_dataset.y[1] - xr_dataset.y[0])
         except IndexError:
-            # Print assumes that the data is not resampled
+            # Assume that the data is not resampled
+            logger.warning(
+                "Could not determine resampling ratio, assuming no resampling"
+            )
             resampling_ratio = 1
 
     pixel_multiplier = (
@@ -270,6 +276,7 @@ def compute_confidence_intervals(
         ci_min = "_F0005"
         ci_max = "_F0995"
     else:
+        logger.error("Unknown confidence level")
         raise ValueError("Unknown confidence level")
 
     # uncertainty to confidence intervals

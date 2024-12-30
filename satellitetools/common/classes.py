@@ -6,6 +6,7 @@ Common classes for gee and aws_cog process.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
+import logging
 from typing import Union
 
 try:
@@ -19,6 +20,8 @@ except ImportError:
 
 
 from shapely.geometry import Polygon
+
+logger = logging.getLogger(__name__)
 
 
 class DataSource(StrEnum):
@@ -78,7 +81,9 @@ class AOI:
 # Deprecated
 class RequestParams:
     def __init__(self, *args, **kwargs):
-        raise DeprecationWarning(
-            "RequestParams is deprecated. Replace with Sentinel2RequestParams from"
-            "common.sentinel2 with same parameters."
+        deprecation_msg = (
+            "RequestParams is deprecated. Replace with "
+            "Sentinel2RequestParams from common.sentinel2 with same parameters."
         )
+        logger.error(deprecation_msg)
+        raise DeprecationWarning(deprecation_msg)

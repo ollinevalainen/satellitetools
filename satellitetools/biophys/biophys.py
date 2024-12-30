@@ -21,6 +21,7 @@ info/classification and hope averaging removes some bad pixels.
  Finnish Meteorological Institute)
  
 """  # noqa
+import logging
 import os
 
 try:
@@ -37,6 +38,8 @@ import numpy as np
 import xarray as xr
 
 from satellitetools.common.sentinel2 import S2Band
+
+logger = logging.getLogger(__name__)
 
 
 class VegetationIndex(StrEnum):
@@ -70,6 +73,7 @@ class BiophysVariable(StrEnum):
         for var in BiophysVariable:
             if var.name == name:
                 return var
+        logger.error(f"BiophysVariable {name} not found.")
         raise ValueError(f"BiophysVariable {name} not found.")
 
 
@@ -433,8 +437,10 @@ def compute_vegetation_index(ds: xr.Dataset, vi: VegetationIndex) -> xr.Dataset:
     """
     if vi == VegetationIndex.NDVI:
         return compute_ndvi(ds)
-    if vi == VegetationIndex.CI_RED_EDGE:
+    elif vi == VegetationIndex.CI_RED_EDGE:
         return compute_ci_red_edge(ds)
-    if vi == VegetationIndex.GCC:
+    elif vi == VegetationIndex.GCC:
         return compute_gcc(ds)
-    raise ValueError(f"Vegetation index {vi} not found.")
+    else:
+        logger.error(f"Vegetation index {vi} not found.")
+        raise ValueError(f"Vegetation index {vi} not found.")

@@ -6,6 +6,7 @@ Classes for handling Sentinel-2 data.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
+import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional
 
@@ -24,6 +25,8 @@ import pandas as pd
 import xarray as xr
 
 from satellitetools.common.classes import AOI, DataSource
+
+logger = logging.getLogger(__name__)
 
 S2_REFL_TRANS = 10000
 SCL_NODATA = 99
@@ -516,10 +519,10 @@ class Sentinel2DataCollection:
 
     def check_s2_items_exist(self) -> bool:
         if self.s2_items is None:
-            print("No Sentinel-2 items searched (s2_items=None).")
+            logger.info("No Sentinel-2 items searched (s2_items=None).")
             return False
         elif len(self.s2_items) == 0:
-            print(
+            logger.info(
                 "No Sentinel-2 items found for the time period or "
                 "left after filtering (s2_items=[])."
             )
@@ -530,7 +533,7 @@ class Sentinel2DataCollection:
         """Create quality information dataframe."""
         # Check that s2_items are available
         if not self.s2_items:
-            print("No Sentinel-2 items to create quality information.")
+            logger.info("No Sentinel-2 items to create quality information.")
             return None
 
         qi_dicts = []
@@ -563,7 +566,7 @@ class Sentinel2DataCollection:
 
         """
         if not self.s2_items:
-            print("No Sentinel-2 items to filter by tile.")
+            logger.debug("No Sentinel-2 items to filter by tile.")
             return None
 
         if tileid is not None:
@@ -598,7 +601,7 @@ class Sentinel2DataCollection:
 
         """
         if self.quality_information is None:
-            print("Quality information not available for filtering.")
+            logger.debug("Quality information not available for filtering.")
             return None
 
         filtered_qi = filter_s2_qi_dataframe(
@@ -627,13 +630,13 @@ class Sentinel2DataCollection:
 
         """
         if not self.s2_items:
-            print("No Sentinel-2 items to filter.")
+            logger.info("No Sentinel-2 items to filter.")
             return None
 
         # Filter by quality information
         self.filter_s2_items_by_quality_information(qi_threshold, qi_filter)
         if not self.s2_items:
-            print("No data passing the quality filter.")
+            logger.info("No data passing the quality filter.")
             return None
 
         # Filter to specified tile or use the first tile

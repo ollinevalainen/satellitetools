@@ -6,6 +6,7 @@ Wrapper functions for Sentinel-2 data retrieval.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
+import logging
 from typing import List, Optional, Tuple
 
 import pandas as pd
@@ -20,6 +21,8 @@ from satellitetools.common.sentinel2 import (
     Sentinel2RequestParams,
 )
 from satellitetools.gee import GEESentinel2DataCollection
+
+logger = logging.getLogger(__name__)
 
 
 def get_s2_qi_and_data(
@@ -59,6 +62,7 @@ def get_s2_qi_and_data(
         )
         data_collection.search_s2_items()
     else:
+        logger.error(f"Unknown datasource {req_params.datasource}")
         raise ValueError(f"Unknown datasource {req_params.datasource}")
 
     data_collection.get_quality_info()

@@ -9,10 +9,10 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
 import datetime
+import logging
 import urllib
-from collections import Counter
 from multiprocessing import Pool
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 from warnings import warn
 
 try:
@@ -51,6 +51,8 @@ from satellitetools.common.vector import (
     transform_crs,
 )
 
+logger = logging.getLogger(__name__)
+
 BUFFER_MULTIPLIER = 8
 
 
@@ -60,8 +62,28 @@ class EarthSearchCollection(StrEnum):
 
 
 class EarthSearch:
-    # Documentation for options at:
-    # https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
+    """Class to handle search for items in EarthSearch.
+
+    Attributes:
+    -----------
+    datestart: Union[str, pd.Timestamp, datetime.datetime]
+        Start date for search
+    dateend: Union[str, pd.Timestamp, datetime.datetime]
+        End date for search
+    bbox: List[float]
+        Bounding box coordinates [minx, miny, maxx, maxy]
+    collection: EarthSearchCollection
+        Collection to search
+    limit: int
+        Limit for search results
+
+    Note:
+    -----
+    EarthSearch API documentation at:
+    https://earth-search.aws.element84.com/v1/api.html#tag/Item-Search/operation/getItemSearch
+
+    """
+
     EARTH_SEARCH_ENDPOINT = "https://earth-search.aws.element84.com/v1"
     DEFAULT_REQUEST_LIMIT = 10000
 
@@ -72,9 +94,25 @@ class EarthSearch:
         bbox: List[float],
         collection: EarthSearchCollection,
     ):
+        """Initialize EarthSearch object.
+
+        Parameters:
+        -----------
+        datestart: Union[str, pd.Timestamp, datetime.datetime]
+            Start date for search
+        dateend: Union[str, pd.Timestamp, datetime.datetime]
+            End date for search
+        bbox: List[float]
+            Bounding box coordinates [minx, miny, maxx, maxy]
+        collection: EarthSearchCollection
+            Collection to search
+
+        """
+
         self.datestart = pd.to_datetime(datestart)
         self.dateend = pd.to_datetime(dateend)
         if self.datestart > self.dateend:
+            logger.error("datestart must be before dateend.")
             raise ValueError("datestart must be before dateend.")
         self.bbox = bbox
         self.collection = collection
@@ -85,7 +123,24 @@ class EarthSearch:
         datestart: pd.Timestamp,
         dateend: pd.Timestamp,
         collection: EarthSearchCollection,
-    ):
+    ) -> List[Item]:
+        """Search for items in EarthSearch collection.
+
+        Parameters:
+        -----------
+        datestart: pd.Timestamp
+            Start date for search
+        dateend: pd.Timestamp
+            End date for search
+        collection: EarthSearchCollection
+            Collection to search
+
+        Returns:
+        --------
+        all_items: List[Item]
+            List of items
+
+        """
 
         # Split queries to half year time ranges
         time_ranges = split_time_range(datestart, dateend)
@@ -107,10 +162,19 @@ class EarthSearch:
             if search.matched() > 0:
                 all_items.extend(search.item_collection())
 
-        print("Found {} items.".format(len(all_items)))
+        logger.info("Found {} items.".format(len(all_items)))
         return all_items
 
-    def get_items(self):
+    def get_items(self) -> List[Item]:
+        """Get items from EarthSearch.
+
+        Returns:
+        --------
+        all_items: List[Item]
+            List of items
+
+        """
+
         all_items = []
         # Search for items
         items = self.search_collection(self.datestart, self.dateend, self.collection)
@@ -143,7 +207,21 @@ class EarthSearch:
         return all_items
 
 
-def remove_duplicate_items(items):
+def remove_duplicate_items(items) -> List[Item]:
+    """Remove duplicate items from list of items.
+
+    Parameters:
+    -----------
+    items: List[Item]
+        List of items
+
+    Returns:
+    --------
+    filtered_items: List[Item]
+        Filtered list of items
+
+    """
+
     # Find duplicate items (same "s2:product_uri" )
     duplicate_product_ids = []
     all_product_ids = []
@@ -207,7 +285,7 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
     def search_s2_items(self):
         """Search for Sentinel-2 items from AWS Open data registry."""
 
-        print(
+        logger.info(
             "Searching S2 data from {} to {} for {}".format(
                 self.req_params.datestart, self.req_params.dateend, self.aoi.name
             )
@@ -228,10 +306,10 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
 
         # Check that s2_items are available
         if not self.s2_items:
-            print("No Sentinel-2 items available.")
+            logger.info("No Sentinel-2 items available.")
             return None
 
-        print("Computing S2 quality information...")
+        logger.info("Computing S2 quality information...")
         if self.multiprocessing is not None:
             self.s2_items = _multiprocess_get_scl_data(
                 self.s2_items,
@@ -256,7 +334,7 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
             return None
 
         self.sort_s2_items()
-        print(f"Retrieving S2 data from {len(self.s2_items)} products...")
+        logger.info(f"Retrieving S2 data from {len(self.s2_items)} products...")
         if self.multiprocessing is not None:
             self.s2_items = _multiprocess_get_item_s2_data(
                 self.s2_items,
@@ -268,7 +346,7 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
 
         else:
             for s2_item in self.s2_items:
-                print("Get data for item {}".format(s2_item.metadata.assetid))
+                logger.info("Get data for item {}".format(s2_item.metadata.assetid))
 
                 # Get band data
                 s2_item.get_item_data(
@@ -655,7 +733,24 @@ def _multiprocess_get_scl_data(
     return results
 
 
-def split_time_range(datestart: pd.Timestamp, dateend: pd.Timestamp):
+def split_time_range(
+    datestart: pd.Timestamp, dateend: pd.Timestamp
+) -> List[Tuple[pd.Timestamp, pd.Timestamp]]:
+    """Split time range to half year time ranges.
+
+    Parameters:
+    -----------
+    datestart: pd.Timestamp
+        Start date
+    dateend: pd.Timestamp
+        End date
+
+    Returns:
+    --------
+    time_ranges: List[Tuple[pd.Timestamp, pd.Timestamp]]
+        List of time ranges
+
+    """
     time_ranges = []
     current_start = datestart
 
@@ -670,42 +765,42 @@ def split_time_range(datestart: pd.Timestamp, dateend: pd.Timestamp):
 
 
 # Currently unused function, remove if not needed. Doesn't work with the current
-# implementation of AWSSentinel2DataCollection (data not transferred to pd.DataFrame)
-def check_shapes(dataframe, bands):
-    # band to band comparison
-    dataframe_cp = dataframe.copy()
-    drop_these = []
-    for image in dataframe_cp.itertuples(index=True):
-        for band in bands[1:]:
-            if getattr(image, bands[0]).shape != getattr(image, band).shape:
-                print(
-                    """Shape of bands doesn't match for image {} """.format(
-                        image.productid
-                    )
-                )
-                drop_these.append(image.Index)
-                break
-    # Drop images that have inconsistend shapes of bands
-    dataframe.drop(index=drop_these, inplace=True)
+# implementation of AWSSentinel2DataCollection (data not in pd.DataFrame anymore)
+# def check_shapes(dataframe, bands):
+#     # band to band comparison
+#     dataframe_cp = dataframe.copy()
+#     drop_these = []
+#     for image in dataframe_cp.itertuples(index=True):
+#         for band in bands[1:]:
+#             if getattr(image, bands[0]).shape != getattr(image, band).shape:
+#                 print(
+#                     """Shape of bands doesn't match for image {} """.format(
+#                         image.productid
+#                     )
+#                 )
+#                 drop_these.append(image.Index)
+#                 break
+#     # Drop images that have inconsistend shapes of bands
+#     dataframe.drop(index=drop_these, inplace=True)
 
-    # solve most common shape
-    shapes = list(dataframe[bands[0]].apply(lambda x: np.shape(x)))
-    counts = Counter(shapes)
-    most_common_shape = counts.most_common(1)[0][0]
+#     # solve most common shape
+#     shapes = list(dataframe[bands[0]].apply(lambda x: np.shape(x)))
+#     counts = Counter(shapes)
+#     most_common_shape = counts.most_common(1)[0][0]
 
-    dataframe_cp = dataframe.copy()
-    drop_these = []
-    # image to image comparison
-    for image in dataframe_cp.itertuples(index=True):
-        if getattr(image, bands[0]).shape != most_common_shape:
-            print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
-            print("Most common shape = {}".format(most_common_shape))
-            print("Shape counts {}".format(counts))
-            drop_these.append(image.Index)
+#     dataframe_cp = dataframe.copy()
+#     drop_these = []
+#     # image to image comparison
+#     for image in dataframe_cp.itertuples(index=True):
+#         if getattr(image, bands[0]).shape != most_common_shape:
+#             print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
+#             print("Most common shape = {}".format(most_common_shape))
+#             print("Shape counts {}".format(counts))
+#             drop_these.append(image.Index)
 
-    cleaned_dataframe = dataframe.drop(index=drop_these).reset_index(drop=True)
+#     cleaned_dataframe = dataframe.drop(index=drop_these).reset_index(drop=True)
 
-    return cleaned_dataframe
+#     return cleaned_dataframe
 
 
 # To be deprecated functions
@@ -732,6 +827,7 @@ def search_s2_cogs(aoi: AOI, req_params: Sentinel2RequestParams) -> List[Item]:
         "Use AWSSentinel2DataCollection, and"
         "AWSSentinel2DataCollection.search_s2_items() instead."
     )
+    logger.warning(DEPRECATION_WARNING_TEXT)
     warn(DEPRECATION_WARNING_TEXT, DeprecationWarning, stacklevel=2)
 
     data_collection = AWSSentinel2DataCollection(aoi, req_params)
@@ -766,6 +862,7 @@ def cog_get_s2_quality_info(
         "AWSSentinel2DataCollection.get_quality_info() or function get_s2_qi_and_data()"
         "in satellitetools.common.wrappers instead."
     )
+    logger.warning(DEPRECATION_WARNING_TEXT)
     warn(DEPRECATION_WARNING_TEXT, DeprecationWarning, stacklevel=2)
 
     data_collection = AWSSentinel2DataCollection(aoi, req_params)
@@ -803,6 +900,7 @@ def cog_get_s2_band_data(
         "Use AWSSentinel2DataCollection, and AWSSentinel2DataCollection.get_s2_data() "
         " or function get_s2_qi_and_data() in satellitetools.common.wrappers instead."
     )
+    logger.warning(DEPRECATION_WARNING_TEXT)
     warn(DEPRECATION_WARNING_TEXT, DeprecationWarning, stacklevel=2)
 
     data_collection = AWSSentinel2DataCollection(aoi, req_params)

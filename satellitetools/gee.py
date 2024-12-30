@@ -8,6 +8,7 @@ Module to retrieve Sentinel-2 data from Google Earth Engine (GEE).
 
 """
 import datetime
+import logging
 from typing import Dict, List, Tuple, Union
 from warnings import warn
 
@@ -29,6 +30,8 @@ from satellitetools.common.sentinel2 import (
     Sentinel2ObservationGeometry,
     Sentinel2RequestParams,
 )
+
+logger = logging.getLogger(__name__)
 
 NO_DATA = -99999
 GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
@@ -96,6 +99,9 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
                 )
                 metadata_dict["observation_geometry"] = observation_geometry
             except KeyError:
+                logger.debug(
+                    f"No observation geometry available for {productid}. Let's not set it."
+                )
                 # There is no observation geometry information available, so let's not set it
                 pass
 
@@ -145,6 +151,9 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
                     view_zenith=properties["view_zenith"][i],
                 )
             except KeyError:  # No observation geometry available
+                logger.debug(
+                    f"No observation geometry available for {productid}. Let's not set it."
+                )
                 observation_geometry = None
 
             # Check data consistency
@@ -155,7 +164,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
             ]
             unique_lens = set(band_lens + coord_lens)
             if len(unique_lens) > 1:
-                print(
+                logger.debug(
                     f"Data lengths are not consistent for {productid}. "
                     "Dropping product."
                 )
@@ -185,7 +194,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
                 s2_item.data = band_data
                 s2_item.coordinates = coordinates
 
-    def get_s2_item_with_productid(self, productid: str):
+    def get_s2_item_with_productid(self, productid: str) -> Union[Sentinel2Item, None]:
         """Get Sentinel-2 item with productid.
 
         Parameters
@@ -195,7 +204,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
 
         Returns
         -------
-        s2_item : Sentinel2Item
+        s2_item : Union[Sentinel2Item, None]
             Sentinel-2 item.
 
         """
@@ -230,7 +239,9 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         """
 
         if self.s2_items is None:
-            print(f"No S2 items available for {self.aoi.name}. Get quality info first.")
+            logger.info(
+                f"No S2 items available for {self.aoi.name}. Get quality info first."
+            )
             return None
 
         gee_assetids = []
@@ -268,7 +279,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         multi_data_collection = MultiGEESentinel2DataCollection(
             [self.aoi], self.req_params
         )
-        print(
+        logger.info(
             "Searching and computing quality information for S2 data "
             "from {} to {} for {}".format(
                 self.req_params.datestart, self.req_params.dateend, self.aoi.name
@@ -280,7 +291,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         self.quality_information = multi_data_collection.data_collections[
             self.aoi.name
         ].quality_information
-        print(f"Found {len(self.s2_items)} items.")
+        logger.info(f"Found {len(self.s2_items)} items.")
 
     def get_s2_data(self):
         """Get S2 data (level L2A, bottom of atmosphere data) from GEE."""
@@ -293,22 +304,26 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         multi_data_collection.data_collections[self.aoi.name].s2_items = self.s2_items
 
         if self.s2_items:
-            print("Retrieving data...")
-        multi_data_collection.ee_get_s2_data()
-        self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
+            logger.info("Retrieving data...")
+            multi_data_collection.ee_get_s2_data()
+            self.s2_items = multi_data_collection.data_collections[
+                self.aoi.name
+            ].s2_items
+        else:
+            logger.info("No data to be retrieved.")
 
     def search_s2_items(self):
         multi_data_collection = MultiGEESentinel2DataCollection(
             [self.aoi], self.req_params
         )
-        print(
+        logger.info(
             "Searching S2 data from {} to {} for area {}".format(
                 self.req_params.datestart, self.req_params.dateend, self.aoi.name
             )
         )
         multi_data_collection.ee_search_s2_products()
         self.s2_items = multi_data_collection.data_collections[self.aoi.name].s2_items
-        print(f"Found {len(self.s2_items)} items.")
+        logger.info(f"Found {len(self.s2_items)} items.")
 
 
 class MultiGEESentinel2DataCollection:
@@ -535,7 +550,7 @@ class MultiGEESentinel2DataCollection:
             features.append(feature)
 
         if len(features) == 0:
-            print("No data to be retrieved.")
+            logger.debug("No data to be retrieved.")
             return None
 
         feature_collection = ee.FeatureCollection(features)
@@ -749,6 +764,7 @@ def ee_get_s2_quality_info(
         "Use GEESentinel2DataCollection, MultiGEESentinel2DataCollection or function "
         "get_s2_qi_and_data() in satellitetools.common.wrappers instead."
     )
+    logger.warning(DEPRECATION_WARNING_TEXT)
     warn(DEPRECATION_WARNING_TEXT, DeprecationWarning, stacklevel=2)
 
     if isinstance(aois, str):
@@ -797,6 +813,7 @@ def ee_get_s2_data(
         "Use GEESentinel2DataCollection, MultiGEESentinel2DataCollection or function"
         " get_s2_qi_and_data() in satellitetools.common.wrappers instead."
     )
+    logger.warning(DEPRECATION_WARNING_TEXT)
     warn(DEPRECATION_WARNING_TEXT, DeprecationWarning, stacklevel=2)
 
     if isinstance(aois, str):
