@@ -261,7 +261,6 @@ processs and some bad data acquisition dates might pass the filter.
 - [ ] Plan branching strategy with CI/CD
 - [ ] Add changelog
 - [ ] Refactor ee_* functions in gee.py. They have a lot of repetition.
-- [ ] From print to logging
 - [ ] Calculate vegetation indices directly in GEE cloud and return only timeseries
 
 **Wishful thinking:**
