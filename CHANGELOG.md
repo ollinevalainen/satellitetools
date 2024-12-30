@@ -30,6 +30,7 @@ Too much has changed compared to the first release, but here's summary of change
 * Improved docstrings, added examples and updated README.
 * Documentation using sphinx
 * Testing for python versions 3.10, 3.11 and 3.12 using nox
+* Changed from print statements to logging.
 
 ## 1.0.0
 This release is currently (7 February 2022) in use in Field Observatory (https://www.fieldobservatory.org/) and cited in a scientific article "Towards agricultural soil carbon monitoring, reporting and verification through Field Observatory Network (FiON)" that describes Field Observatory and has been accepted for publishing in EGU's Geoscientific Instrumentation, Methods and Data Systems journal (https://doi.org/10.5194/gi-2021-21).

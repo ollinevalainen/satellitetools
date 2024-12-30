@@ -228,27 +228,9 @@ errors/misclassifications in it. This affects also the accuracy of the filtering
 processs and some bad data acquisition dates might pass the filter.
 
 
- ## Major changes from merging develop-2024-update to develop (develop is now the master)! ##
- **Breaking changes:** ⚠️
+ ## Changes in version 2.0.0 ##
 
-* Renamed xrtools.py to timeseries.py
-* RequestParams class is now Sentinel2RequestParams in sentinel2 submodule
-* Restructured files and removed nesting. For example gee imported as satellitetools.gee instead of satellitetools.gee.gee
-* The quality information dataframe doesn't have anymore "Date" column, but instead index named "acquisition_time" as UTC aware timestamp (from pd.to_datetime).
-
-**New features:** 🔧
-
-* Refactored and made codes more object-oriented and modular:
-* There's now parent classes Sentinel2DataCollection, Sentinel2Item and Sentinel2Metadata which have datasource specific child classes:
-    - GEESentinel2DataCollection
-    - AWSSentinel2DataCollection, AWSSentinel2Item, AWSSentinel2Metadata
-* The parent classes have methods that are common for both data sources and the child classes have methods that are specific to the data source.
-* Improved handling of Sentinel-2 bands and scene classification classes with S2Band and SCLClass classes
-* Biophysical processor is now a class SNAPBiophysProcessor, also the biophysical variables and vegetation indices are now Enum classes.
-* Enabled easier importing and access of classes and submodules. For example, you can define the data source with satellitetools.DataSource.GEE and the bands with satellitetools.S2Band.B4.
-* Added tests.
-* Improved docstrings, added examples and updated README.
-
+Check CHANGELOG.md.
 
 ## TODO ##
 **Realistic:**
@@ -259,7 +241,6 @@ processs and some bad data acquisition dates might pass the filter.
 - [ ] Examples to docstrings
 - [ ] Improve tests and start measuring coverage
 - [ ] Plan branching strategy with CI/CD
-- [ ] Add changelog
 - [ ] Refactor ee_* functions in gee.py. They have a lot of repetition.
 - [ ] Calculate vegetation indices directly in GEE cloud and return only timeseries
 
