@@ -13,14 +13,28 @@ free to contact me in case you want more information about this package.
  Package also includes python implementation of ESA's SNAP Biophysical processor v1 
  which can be used to compute biophysical parameters, such as leaf area index (LAI) (Original Java code in SNAP [here](https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical). Algorithm documentation: <http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf>.
 
-Author: Olli Nevalainen, Finnish Meteorological Institute.
 
-Source code at: <https://github.com/ollinevalainen/satellitetools>.
+Documentation: <https://satellitetools.readthedocs.io/>
+
+Source code at: <https://github.com/ollinevalainen/satellitetools>
+
+Author: Olli Nevalainen, Finnish Meteorological Institute.
 
 ## Installation ##
 
+**From PyPi:**
+```console
+pip install satellitetools
+```
+
+**From GitHub:**
 ```console
 pip install git+https://github.com/ollinevalainen/satellitetools.git
+```
+
+**Development branch:**
+```console
+pip install git+https://github.com/ollinevalainen/satellitetools.git@develop
 ```
 
 ## About Google Earth Engine ##
@@ -235,8 +249,6 @@ Check CHANGELOG.md.
 ## TODO ##
 **Realistic:**
 
-- [ ] Release 2.0.0 and publish to PyPi
-- [ ] Push docs to Read the docs
 - [ ] Include example notebook in the documentation
 - [ ] Examples to docstrings
 - [ ] Improve tests and start measuring coverage
