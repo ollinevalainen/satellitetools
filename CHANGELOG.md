@@ -1,5 +1,9 @@
 # Changelog
 
+## satellitetools 2.0.1
+
+* Fixed printing/logging bugs
+
 ## satellitetools 2.0.0 🛰️ 
 This is the second release of satellitetools package :tada:
 

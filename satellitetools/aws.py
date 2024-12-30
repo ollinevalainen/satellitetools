@@ -319,7 +319,6 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
             )
         else:
             for s2_item in self.s2_items:
-                # print("Retrieving QI for item {}...".format(item.id))
                 s2_item.get_band_data(
                     self.aoi, S2Band.SCL, self.req_params.qi_evaluation_scale
                 )
@@ -686,7 +685,7 @@ def get_observation_geometry(item: Item) -> Sentinel2ObservationGeometry:
 def _get_s2_data_single(
     s2_item: AWSSentinel2Item, aoi: AOI, bands: List[S2Band], target_resolution: float
 ):
-    print("Get data for item {}".format(s2_item.metadata.assetid))
+    logger.info("Get data for item {}".format(s2_item.metadata.assetid))
 
     # Get band data
     s2_item.get_item_data(
