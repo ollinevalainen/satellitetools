@@ -11,7 +11,7 @@ Apologies for the lack of documentation at the moment. Please feel
 free to contact me in case you want more information about this package.
 
  Package also includes python implementation of ESA's SNAP Biophysical processor v1 
- which can be used to compute biophysical parameters, such as leaf area index (LAI) (Original Java code in SNAP [here](https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical). Algorithm documentation: http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf.
+ which can be used to compute biophysical parameters, such as leaf area index (LAI) (Original Java code in SNAP [here](https://github.com/senbox-org/s2tbx/tree/master/s2tbx-biophysical/src/main/java/org/esa/s2tbx/biophysical). Algorithm documentation: <http://step.esa.int/docs/extra/ATBD_S2ToolBox_L2B_V1.1.pdf>.
 
 Author: Olli Nevalainen, Finnish Meteorological Institute.
 
