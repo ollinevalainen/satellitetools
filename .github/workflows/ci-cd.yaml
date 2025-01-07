@@ -1,0 +1,31 @@
+name: ci-cd
+
+on: [push, pull_request]
+
+jobs:
+  generate-jobs:
+    runs-on: ubuntu-latest
+    outputs:
+      session: ${{ steps.set-matrix.outputs.session }}
+    steps:
+    - uses: actions/checkout@v4
+    - uses: wntrblm/nox@main
+    - id: set-matrix
+      shell: bash
+      run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
+  ci:
+    name: Session ${{ matrix.session }}
+    needs: [generate-jobs]
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
+    steps:
+
+    - name : Checkout repository
+      uses: actions/checkout@v4
+    
+    - name: Run nox (pytests with different python versions)
+      uses: wntrblm/nox@main
+      run: nox -s "${{ matrix.session }}"

@@ -1,7 +1,11 @@
 # Changelog
 
-## satellitetools 2.0.1
+## satellitetools 2.1.0
 
+### Feature
+* Set CI-CD workflow using Github Actions and Python Semantic Release
+
+### Fix
 * Fixed printing/logging bugs
 
 ## satellitetools 2.0.0 🛰️ 

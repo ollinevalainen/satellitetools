@@ -252,6 +252,7 @@ Check CHANGELOG.md.
 - [ ] Include example notebook in the documentation
 - [ ] Examples to docstrings
 - [ ] Improve tests and start measuring coverage
+- [ ] Add coverage and docs bulding to nox sessions
 - [ ] Plan branching strategy with CI/CD
 - [ ] Refactor ee_* functions in gee.py. They have a lot of repetition.
 - [ ] Calculate vegetation indices directly in GEE cloud and return only timeseries
