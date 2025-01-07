@@ -3,31 +3,37 @@ name: ci-cd
 on: [push, pull_request]
 
 jobs:
-  generate-jobs:
-    runs-on: ubuntu-latest
-    outputs:
-      session: ${{ steps.set-matrix.outputs.session }}
-    steps:
-    - uses: actions/checkout@v4
-    - uses: wntrblm/nox@main
-    - id: set-matrix
-      shell: bash
-      run: echo session=$(nox --json -l | jq -c '[.[].session]') | tee --append $GITHUB_OUTPUT
   ci:
-    name: Session ${{ matrix.session }}
-    needs: [generate-jobs]
+    # Set up operating system
     runs-on: ubuntu-latest
     strategy:
-      fail-fast: false
       matrix:
-        session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
+        python-version: ["3.10", "3.11", "3.12"]
+
+    # Define job steps
     steps:
-
-    - name: Checkout repository
+    - uses: actions/checkout@v4
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ matrix.python-version }}
+  
+    - name: Check-out repository
       uses: actions/checkout@v4
-    
-    - name: Install nox
-      uses: wntrblm/nox@main
 
-    - name: Run nox (pytests with different python versions)
-      run: nox -s "${{ matrix.session }}"
+    - name: Install poetry
+      uses: snok/install-poetry@v1
+
+    - name: Install package
+      run: poetry install
+
+    - name: Test with pytest
+      run: poetry run pytest tests/ --cov=pycounts --cov-report=xml
+
+    - name: Use Codecov to track coverage
+      uses: codecov/codecov-action@v5
+      with:
+        files: ./coverage.xml   # coverage report
+
+    - name: Build documentation
+      run: poetry run make html --directory docs/
