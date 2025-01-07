@@ -23,9 +23,11 @@ jobs:
         session: ${{ fromJson(needs.generate-jobs.outputs.session) }}
     steps:
 
-    - name : Checkout repository
+    - name: Checkout repository
       uses: actions/checkout@v4
     
-    - name: Run nox (pytests with different python versions)
+    - name: Install nox
       uses: wntrblm/nox@main
+
+    - name: Run nox (pytests with different python versions)
       run: nox -s "${{ matrix.session }}"
