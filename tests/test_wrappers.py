@@ -3,6 +3,8 @@ from shapely.geometry import Polygon
 import satellitetools as sattools
 from satellitetools.common.sentinel2 import S2_FILTER1
 
+from .test_gee import initialize_gee
+
 qvidja_ec_field_geom = [
     [22.3913931, 60.295311],
     [22.3917056, 60.2951721],
@@ -121,12 +123,3 @@ class TestWrapper:
         assert df is not None
         assert not df.empty
         assert ds is not None
-
-
-def initialize_gee():
-    import os
-
-    import ee
-
-    ee_project = os.environ.get("EE_PROJECT_PYTEST")
-    ee.Initialize(project=ee_project)
