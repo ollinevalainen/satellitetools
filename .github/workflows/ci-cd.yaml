@@ -31,9 +31,7 @@ jobs:
       env:
         EE_SERVICE_ACCOUNT_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_PYTEST }}
         EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST }}
-      run: |
-        echo $EE_SERVICE_ACCOUNT_PYTEST
-        poetry run pytest tests/ --cov=pycounts --cov-report=xml
+      run: poetry run pytest tests/ --cov=satellitetools --cov-report=xml
 
     - name: Use Codecov to track coverage
       uses: codecov/codecov-action@v5
