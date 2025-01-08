@@ -11,9 +11,9 @@ ee_project = os.environ.get("EE_PROJECT_PYTEST")
 ee_service_account = os.environ.get("EE_SERVICE_ACCOUNT_PYTEST")
 ee_service_account_credentials = os.environ.get("EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST")
 
-if ee_project:
+if ee_project is not None:
     ee.Initialize(project=ee_project)
-elif ee_service_account and ee_service_account_credentials:
+elif ee_service_account is not None and ee_service_account_credentials is not None:
     credentials = ee.ServiceAccountCredentials(
         ee_service_account, ee_service_account_credentials
     )
