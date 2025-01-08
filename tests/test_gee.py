@@ -10,12 +10,23 @@ import satellitetools as sattools
 ee_project = os.environ.get("EE_PROJECT_PYTEST")
 ee_service_account = os.environ.get("EE_SERVICE_ACCOUNT_PYTEST")
 ee_service_account_credentials = os.environ.get("EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST")
+ee_service_account_credentials_file = os.environ.get(
+    "EE_SERVICE_ACCOUNT_CREDENTIALS_FILE_PYTEST"
+)
 
 if ee_project is not None:
     ee.Initialize(project=ee_project)
 elif ee_service_account is not None and ee_service_account_credentials is not None:
     credentials = ee.ServiceAccountCredentials(
-        ee_service_account, ee_service_account_credentials
+        ee_service_account, key_data=ee_service_account_credentials
+    )
+    ee.Initialize(credentials=credentials)
+elif (
+    ee_service_account_credentials_file is not None
+    and ee_service_account_credentials_file is not None
+):
+    credentials = ee.ServiceAccountCredentials(
+        ee_service_account, key_file=ee_service_account_credentials_file
     )
     ee.Initialize(credentials=credentials)
 else:
