@@ -8,3 +8,4 @@ __pycache__
 .python-version
 docs/build
 dist
+.coverage*

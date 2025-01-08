@@ -8,7 +8,17 @@ from shapely.geometry import Polygon
 import satellitetools as sattools
 
 ee_project = os.environ.get("EE_PROJECT_PYTEST")
-ee.Initialize(project=ee_project)
+ee_service_account = os.environ.get("EE_SERVICE_ACCOUNT_PYTEST")
+ee_service_account_credentials = os.environ.get("EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST")
+
+if ee_project:
+    ee.Initialize(project=ee_project)
+elif ee_service_account and ee_service_account_credentials:
+    ee.ServiceAccountCredentials(ee_service_account, ee_service_account_credentials)
+else:
+    # Try to initialize with default credentials
+    ee.Initialize()
+
 
 qvidja_ec_field_geom = [
     [22.3913931, 60.295311],
