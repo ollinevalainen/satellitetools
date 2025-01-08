@@ -17,7 +17,7 @@ elif ee_service_account and ee_service_account_credentials:
     credentials = ee.ServiceAccountCredentials(
         ee_service_account, ee_service_account_credentials
     )
-    ee.Initialize(credentials)
+    ee.Initialize(credentials=credentials)
 else:
     # Try to initialize with default credentials
     ee.Initialize()

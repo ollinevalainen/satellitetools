@@ -9,9 +9,6 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11", "3.12"]
-    env:
-      EE_SERVICE_ACCOUNT_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_PYTEST }}
-      EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST }}
 
     # Define job steps
     steps:
@@ -31,7 +28,12 @@ jobs:
       run: poetry install
 
     - name: Test with pytest
-      run: poetry run pytest tests/ --cov=pycounts --cov-report=xml
+      env:
+        EE_SERVICE_ACCOUNT_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_PYTEST }}
+        EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST }}
+      run: |
+        echo $EE_SERVICE_ACCOUNT_PYTEST
+        poetry run pytest tests/ --cov=pycounts --cov-report=xml
 
     - name: Use Codecov to track coverage
       uses: codecov/codecov-action@v5
