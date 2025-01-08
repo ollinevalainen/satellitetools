@@ -14,7 +14,10 @@ ee_service_account_credentials = os.environ.get("EE_SERVICE_ACCOUNT_CREDENTIALS_
 if ee_project:
     ee.Initialize(project=ee_project)
 elif ee_service_account and ee_service_account_credentials:
-    ee.ServiceAccountCredentials(ee_service_account, ee_service_account_credentials)
+    credentials = ee.ServiceAccountCredentials(
+        ee_service_account, ee_service_account_credentials
+    )
+    ee.Initialize(credentials)
 else:
     # Try to initialize with default credentials
     ee.Initialize()
