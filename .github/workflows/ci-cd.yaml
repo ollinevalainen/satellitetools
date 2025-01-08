@@ -34,7 +34,7 @@ jobs:
     - name: Create credentials json
       env:
         EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST: ${{ secrets.EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST }}
-      run: echo '$EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST' | base64 -di > $EE_SERVICE_ACCOUNT_CREDENTIALS_FILE_PYTEST
+      run: echo $EE_SERVICE_ACCOUNT_CREDENTIALS_PYTEST | base64 --decode > $EE_SERVICE_ACCOUNT_CREDENTIALS_FILE_PYTEST
 
     - name: Test with pytest
       run: poetry run pytest tests/ --cov=satellitetools --cov-report=xml
