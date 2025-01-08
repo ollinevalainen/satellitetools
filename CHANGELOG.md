@@ -7,6 +7,7 @@
 
 ### Fix
 * Fixed printing/logging bugs
+* Updated tests to work with Github Actions
 
 ## satellitetools 2.0.0 🛰️ 
 This is the second release of satellitetools package :tada:
