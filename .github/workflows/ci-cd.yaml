@@ -55,8 +55,8 @@ jobs:
     # Only run this job if the "ci" job passes
     needs: ci
 
-    # Only run this job if new work is pushed to "main"
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    # Only run this job if new work is pushed to "master"
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
 
     # Set up operating system
     runs-on: ubuntu-latest
