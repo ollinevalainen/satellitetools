@@ -18,7 +18,11 @@ Documentation: <https://satellitetools.readthedocs.io/>
 
 Source code at: <https://github.com/ollinevalainen/satellitetools>
 
+Citing: If you use this package in your research, I would appeaciate if you cite the relevant version from Zenodo: <https://doi.org/10.5281/zenodo.5993291>
+
 Author: Olli Nevalainen, Finnish Meteorological Institute.
+
+
 
 ## Installation ##
 
