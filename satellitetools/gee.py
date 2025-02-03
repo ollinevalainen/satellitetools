@@ -21,6 +21,7 @@ from satellitetools.common.sentinel2 import (
     S2_FILTER1,
     S2_REFL_TRANS,
     SCL_NODATA,
+    SPECTRAL_BAND_NO_DATA,
     Coordinates,
     S2Band,
     SCLClass,
@@ -33,7 +34,7 @@ from satellitetools.common.sentinel2 import (
 
 logger = logging.getLogger(__name__)
 
-NO_DATA = -99999
+GEE_NO_DATA = -99999
 GEE_DATASET = "COPERNICUS/S2_SR_HARMONIZED"
 GEE_SCL_BAND = S2Band.SCL.to_gee()
 
@@ -181,7 +182,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
                     band_arr = band_arr.astype(np.int32)
                 else:
                     xs, ys, band_arr = gee_lists_to_2D_array(
-                        xs, ys, band_arr, no_data=np.nan
+                        xs, ys, band_arr, no_data=SPECTRAL_BAND_NO_DATA
                     )
                     band_arr = band_arr.astype(np.float64) / S2_REFL_TRANS
 
@@ -615,7 +616,18 @@ class MultiGEESentinel2DataCollection:
                 # get data into 1D arrays
                 x_coords = ee.Array(image_grid.get("x"))
                 y_coords = ee.Array(image_grid.get("y"))
-                band_data = {b: ee.Array(image_grid.get("%s" % b)) for b in bands}
+                no_data_array = ee.Array(
+                    ee.List.repeat(GEE_NO_DATA, x_coords.length().get([0]))
+                )
+
+                band_data = {
+                    b: ee.Algorithms.If(
+                        image_grid.get(b),
+                        ee.Array(image_grid.get(b)),
+                        no_data_array,
+                    )
+                    for b in bands
+                }
 
                 # perform LAI et al. computation possibly here!
 
@@ -699,7 +711,8 @@ def gee_lists_to_2D_array(
         2D array of data values.
 
     """
-
+    # Set missing data from gee to no_data
+    data = [no_data if val == GEE_NO_DATA else val for val in data]
     y_vals, y_idx = np.unique(y_coords, return_inverse=True)
     y_vals = np.flip(y_vals)
     x_vals, x_idx = np.unique(x_coords, return_inverse=True)

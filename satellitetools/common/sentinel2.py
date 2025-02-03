@@ -30,6 +30,7 @@ logger = logging.getLogger(__name__)
 
 S2_REFL_TRANS = 10000
 SCL_NODATA = 99
+SPECTRAL_BAND_NO_DATA = np.nan
 
 
 # Use GEE band naming
@@ -715,9 +716,15 @@ class Sentinel2DataCollection:
                 multitemporal_array,
             )
 
-            aoi_pixels = np.size(multitemporal_array[0, 0, :, :]) - np.sum(
-                np.isnan(multitemporal_array[0, 0, :, :])
-            )
+            # There might be nans within the aoi if data was not available, get the
+            # max amount of aoi pixels
+
+            # Most common amount of nan pixels, i.e. pixels outside aoi
+            nans_per_band = np.isnan(multitemporal_array[0, :, :, :])  # for 1st img
+            sums = np.sum(nans_per_band, axis=(1, 2))  # sums over x and y
+            num_of_outside_aoi_pixels = np.argmax(np.bincount(sums))
+            total_num_of_pixels = np.size(multitemporal_array[0, 0, :, :])
+            aoi_pixels = total_num_of_pixels - num_of_outside_aoi_pixels
 
         if scl_arrays:
             multitemporal_scl_array = np.stack(scl_arrays).astype(np.int16)
