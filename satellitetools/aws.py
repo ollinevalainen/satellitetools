@@ -37,6 +37,7 @@ from satellitetools.common.classes import AOI, DataSource
 from satellitetools.common.raster import mask_raster, resample_raster
 from satellitetools.common.sentinel2 import (
     SCL_NODATA,
+    SPECTRAL_BAND_NO_DATA,
     S2Band,
     SCLClass,
     Sentinel2DataCollection,
@@ -537,7 +538,7 @@ class AWSSentinel2Item(Sentinel2Item):
                 new_kwds = resampled_kwds
 
         # Clip data to AOI
-        no_data = SCL_NODATA if band == S2Band.SCL else np.nan
+        no_data = SCL_NODATA if band == S2Band.SCL else SPECTRAL_BAND_NO_DATA
         with MemoryFile() as memfile:
             with memfile.open(**new_kwds) as dataset:
                 dataset.write(band_data, 1)
