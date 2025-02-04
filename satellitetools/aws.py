@@ -389,7 +389,15 @@ class AWSSentinel2Metadata(Sentinel2Metadata):
         )
         assetid = item.id
         productid = s2_product_id
-        projection = "EPSG:{}".format(item.properties["proj:epsg"])
+        try:
+            projection = "EPSG:{}".format(item.properties["proj:epsg"])  # pystac<1.12.0
+        except KeyError:
+            try:
+                projection = item.properties["proj:code"]  # pystac >= 1.12.0
+            except KeyError as e:
+                logger.error("Projection information not found. Check pySTAC version.")
+                raise e
+
         datasource = DataSource.AWS
 
         self.profiles: Dict[S2Band, dict] = {}  # to store all profiles for bands
