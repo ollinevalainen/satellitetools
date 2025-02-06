@@ -1,9 +1,13 @@
+import logging
 import os
 from pathlib import Path
 
 from shapely.geometry import Polygon
 
 import satellitetools as sattools
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.DEBUG)
 
 qvidja_ec_field_geom = [
     [22.3913931, 60.295311],
@@ -198,4 +202,34 @@ class TestAWS:
         s2_data_collection.get_s2_data()
         assert s2_data_collection.s2_items is not None
         assert all([b in s2_data_collection.s2_items[0].data for b in bands])
+        s2_data_collection.data_to_xarray()
+
+    def test_product_with_missing_data(self):
+        aoi_coords = [
+            [25.874837428345387, 64.789844062914838],
+            [25.87563257650196, 64.790851981054146],
+            [25.875984787908642, 64.790814842307171],
+            [25.875167562154864, 64.789786508355235],
+            [25.874837428345387, 64.789844062914838],
+        ]
+        aoi_polygon = Polygon(aoi_coords)
+        aoi = sattools.AOI("problematic", aoi_polygon, "EPSG:4326")
+        date_start = "2020-08-20"
+        date_end = "2020-09-10"
+        data_source = sattools.DataSource.AWS
+        bands = sattools.S2Band.get_10m_to_20m_bands()
+        request = sattools.Sentinel2RequestParams(
+            date_start,
+            date_end,
+            data_source,
+            bands=bands,
+            target_gsd=20,
+        )
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(
+            aoi, request, test_multiprocessing
+        )
+        s2_data_collection.search_s2_items()
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
         s2_data_collection.data_to_xarray()
