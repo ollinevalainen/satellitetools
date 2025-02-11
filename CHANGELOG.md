@@ -1,6 +1,25 @@
 # CHANGELOG
 
 
+## v2.1.1 (2025-02-11)
+
+### Bug Fixes
+
+* fix: changed aws resampling approach ([`2204825`](https://github.com/ollinevalainen/satellitetools/commit/220482510b65616d78da53f5ef2dba2697e24210))
+
+* fix: added missing 10 m band (B8) ([`9e731f5`](https://github.com/ollinevalainen/satellitetools/commit/9e731f5d8714ecdf83dd8ba321b92ffa364d776c))
+
+* fix: crs property key in different pystac verisons ([`b7acdba`](https://github.com/ollinevalainen/satellitetools/commit/b7acdbadcf503c377275e1bc967c2eecbf12a5df))
+
+* fix: handling of missing band data in GEE images ([`7af22b1`](https://github.com/ollinevalainen/satellitetools/commit/7af22b1b9430cbdd7a9e6b041487d758348695b5))
+
+### Documentation
+
+* docs: added citing information ([`d18e813`](https://github.com/ollinevalainen/satellitetools/commit/d18e813945da16fbde1607d36d437e8b74941a75))
+
+* docs: Updated todo and versions history to README ([`fcf8125`](https://github.com/ollinevalainen/satellitetools/commit/fcf8125ef63b46d222631dee3a59371696590303))
+
+
 ## v2.1.0 (2025-01-08)
 
 ### Bug Fixes

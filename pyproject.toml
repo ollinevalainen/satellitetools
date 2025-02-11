@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "satellitetools"
-version = "2.1.0"
+version = "2.1.1"
 description = "Retrieve Sentinel-2 data and calculate biophysical parameters"
 authors = ["Olli Nevalainen <olli.nevalainen.fmi@gmail.com>"]
 license = "MIT"
