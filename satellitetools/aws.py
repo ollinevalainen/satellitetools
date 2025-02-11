@@ -34,7 +34,7 @@ from pystac_client import Client
 from rasterio import MemoryFile
 
 from satellitetools.common.classes import AOI, DataSource
-from satellitetools.common.raster import mask_raster, resample_raster
+from satellitetools.common.raster import mask_raster, reproject_data_to_profile
 from satellitetools.common.sentinel2 import (
     SCL_NODATA,
     SPECTRAL_BAND_NO_DATA,
@@ -320,8 +320,8 @@ class AWSSentinel2DataCollection(Sentinel2DataCollection):
             )
         else:
             for s2_item in self.s2_items:
-                s2_item.get_band_data(
-                    self.aoi, S2Band.SCL, self.req_params.qi_evaluation_scale
+                s2_item.get_item_data(
+                    self.aoi, [S2Band.SCL], self.req_params.qi_evaluation_scale
                 )
                 s2_item.add_class_percentages()
 
@@ -414,6 +414,27 @@ class AWSSentinel2Metadata(Sentinel2Metadata):
 
         self.observation_geometry = get_observation_geometry(item)
 
+    def get_reference_band(self, target_resolution: float) -> S2Band:
+
+        spatial_resolutions = {
+            band: abs(profile["transform"][0])
+            for band, profile in self.profiles.items()
+        }
+        # Get first band with spatial resolution equal to target resolution
+        reference_band = [
+            band
+            for band, resolution in spatial_resolutions.items()
+            if resolution == target_resolution
+        ]
+
+        if not reference_band:
+            # Get band with smallest spatial resolution
+            reference_band = min(spatial_resolutions, key=spatial_resolutions.get)
+        else:
+            reference_band = reference_band[0]
+
+        return reference_band
+
 
 class AWSSentinel2Item(Sentinel2Item):
     """Class to handle Sentinel-2 item from AWS Open data registry.
@@ -444,7 +465,6 @@ class AWSSentinel2Item(Sentinel2Item):
         self,
         aoi: AOI,
         band: S2Band,
-        target_resolution: float,
     ):
         """Get band data for Sentinel-2 item.
 
@@ -454,12 +474,9 @@ class AWSSentinel2Item(Sentinel2Item):
             Area of interest
         band: S2Band
             Sentinel-2 band
-        target_resolution: float
-            Target resolution
 
-        TODO: No data based on data type information include in the metadata/item
         """
-
+        DEFAULT_BUFFER = 100  # meters
         band_aws = band.to_aws()
         aoi_geometry_data_crs = transform_crs(
             aoi.geometry, aoi.geometry_crs, self.metadata.projection
@@ -469,19 +486,16 @@ class AWSSentinel2Item(Sentinel2Item):
         band_metadata = self.source_item.assets[band_aws].extra_fields["raster:bands"][
             0
         ]
-        spatial_resolution = band_metadata["spatial_resolution"]
 
-        # Resampling currently done for all bands, even though certain bands would not
-        # need it. Otherwise, the data would not align properly (one pixel difference
-        # between unresampled and resampled bands). TODO: try to figure out a way to
-        # avoid resampling for bands that don't need it.
+        # Currently buffer used for all bands, even though certain bands might not
+        # resampling. Otherwise, the data dimensions might not match with
+        # GEE data source. Occationally there was one pixeld difference in x or y dim
+        # with certain polygons.
 
-        # if spatial_resolution != target_resolution:  # resampling needed
-        resampling_needed = True
-        buffer = spatial_resolution * BUFFER_MULTIPLIER
+        # spatial_resolution = band_metadata["spatial_resolution"]
+        # if spatial_resolution != target_resolution:  # resampling needed, use buffer
+        buffer = DEFAULT_BUFFER
         bbox_data_crs = expand_bounds(bbox_data_crs, buffer)
-        # else:
-        #     resampling_needed = False
 
         # # Transform aoi to pixel coordinates/window
         data_transform = rasterio.transform.Affine(
@@ -496,7 +510,7 @@ class AWSSentinel2Item(Sentinel2Item):
         # Get windowed data
         file_url = self.source_item.assets[band_aws].href
         with rasterio.open(file_url) as src:
-            kwds = src.profile
+            profile = src.profile
 
             if band == S2Band.SCL:
                 band_data = src.read(1, window=window, boundless=True)
@@ -514,12 +528,12 @@ class AWSSentinel2Item(Sentinel2Item):
                 band_data = src.read(1, window=window, boundless=True) * scale + offset
 
             # Form a new rasterio dataset
-            transform = rasterio.windows.transform(window, kwds["transform"])
+            transform = rasterio.windows.transform(window, profile["transform"])
             height = band_data.shape[-2]
             width = band_data.shape[-1]
 
-            new_kwds = kwds.copy()
-            new_kwds.update(
+            new_profile = profile.copy()
+            new_profile.update(
                 transform=transform,
                 driver="GTiff",
                 height=height,
@@ -527,37 +541,8 @@ class AWSSentinel2Item(Sentinel2Item):
                 dtype=str(band_data.dtype),
             )
 
-        # Resample if needed
-        if resampling_needed:
-            with MemoryFile() as memfile:
-                with memfile.open(**new_kwds) as dataset:  # Open as DatasetWriter
-                    dataset.write(band_data, 1)
-
-                if band == S2Band.SCL:
-                    resampling_method = rasterio.enums.Resampling.nearest
-                else:
-                    resampling_method = rasterio.enums.Resampling.bilinear
-
-                resampled_data, resampled_kwds = resample_raster(
-                    memfile, target_resolution, resampling_method=resampling_method
-                )
-
-                band_data = resampled_data.squeeze()
-                new_kwds = resampled_kwds
-
-        # Clip data to AOI
-        no_data = SCL_NODATA if band == S2Band.SCL else SPECTRAL_BAND_NO_DATA
-        with MemoryFile() as memfile:
-            with memfile.open(**new_kwds) as dataset:
-                dataset.write(band_data, 1)
-
-            band_data, band_kwds = mask_raster(
-                memfile, aoi_geometry_data_crs, no_data=no_data
-            )
-
-        self.metadata.profiles[band] = band_kwds
+        self.metadata.profiles[band] = new_profile
         self.data[band] = band_data
-        self.create_coordinates(band)
 
     def get_item_data(
         self,
@@ -578,7 +563,58 @@ class AWSSentinel2Item(Sentinel2Item):
         """
 
         for band in bands:
-            self.get_band_data(aoi, band, target_resolution)
+            self.get_band_data(aoi, band)
+
+        aoi_geometry_item_crs = transform_crs(
+            aoi.geometry, aoi.geometry_crs, self.metadata.projection
+        )
+        # Resample all bands to the same resolution and reproject to same shape
+        reference_band = self.metadata.get_reference_band(target_resolution)
+        reference_profile = self.metadata.profiles[reference_band]
+
+        for band in bands:
+            if (
+                self.metadata.profiles[band]["transform"]
+                != reference_profile["transform"]
+            ):
+                src_profile = self.metadata.profiles[band]
+                src_data = self.data[band]
+                # Don't use directly the reference profile, since it might have
+                # different data type than the reprojected band
+                new_profile = src_profile.copy()
+                new_profile.update(
+                    transform=reference_profile["transform"],
+                    driver="GTiff",
+                    height=reference_profile["height"],
+                    width=reference_profile["width"],
+                )
+                resampling = (
+                    rasterio.enums.Resampling.nearest
+                    if band == S2Band.SCL
+                    else rasterio.enums.Resampling.bilinear
+                )
+                reproj_data = reproject_data_to_profile(
+                    src_data, src_profile, new_profile, resampling
+                )
+
+                self.data[band] = reproj_data
+                self.metadata.profiles[band] = new_profile
+
+            # Clip data to AOI
+            no_data = SCL_NODATA if band == S2Band.SCL else SPECTRAL_BAND_NO_DATA
+            band_data = self.data[band]
+            profile = self.metadata.profiles[band]
+            with MemoryFile() as memfile:
+                with memfile.open(**profile) as dataset:
+                    dataset.write(band_data, 1)
+
+                band_data, new_profile = mask_raster(
+                    memfile, aoi_geometry_item_crs, no_data=no_data
+                )
+
+            self.data[band] = band_data
+            self.metadata.profiles[band] = new_profile
+            self.create_coordinates(band)
 
     def add_class_percentages(self):
         """Add class percentages for Sentinel-2 item.
@@ -690,7 +726,7 @@ def get_observation_geometry(item: Item) -> Sentinel2ObservationGeometry:
     return observation_geometry
 
 
-# define function for multiprocessing
+# functions for multiprocessing
 def _get_s2_data_single(
     s2_item: AWSSentinel2Item, aoi: AOI, bands: List[S2Band], target_resolution: float
 ):
@@ -710,7 +746,11 @@ def _get_s2_data_single(
 
 
 def _get_scl_data_single(s2_item: AWSSentinel2Item, aoi: AOI, target_resolution: float):
-    s2_item.get_band_data(aoi, S2Band.SCL, target_resolution)
+    s2_item.get_item_data(
+        aoi,
+        [S2Band.SCL],
+        target_resolution,
+    )
     s2_item.add_class_percentages()
     return s2_item
 
@@ -770,45 +810,6 @@ def split_time_range(
         current_start = next_end
 
     return time_ranges
-
-
-# Currently unused function, remove if not needed. Doesn't work with the current
-# implementation of AWSSentinel2DataCollection (data not in pd.DataFrame anymore)
-# def check_shapes(dataframe, bands):
-#     # band to band comparison
-#     dataframe_cp = dataframe.copy()
-#     drop_these = []
-#     for image in dataframe_cp.itertuples(index=True):
-#         for band in bands[1:]:
-#             if getattr(image, bands[0]).shape != getattr(image, band).shape:
-#                 print(
-#                     """Shape of bands doesn't match for image {} """.format(
-#                         image.productid
-#                     )
-#                 )
-#                 drop_these.append(image.Index)
-#                 break
-#     # Drop images that have inconsistend shapes of bands
-#     dataframe.drop(index=drop_these, inplace=True)
-
-#     # solve most common shape
-#     shapes = list(dataframe[bands[0]].apply(lambda x: np.shape(x)))
-#     counts = Counter(shapes)
-#     most_common_shape = counts.most_common(1)[0][0]
-
-#     dataframe_cp = dataframe.copy()
-#     drop_these = []
-#     # image to image comparison
-#     for image in dataframe_cp.itertuples(index=True):
-#         if getattr(image, bands[0]).shape != most_common_shape:
-#             print("""Image {} uncommon shape. Dropping it.""".format(image.productid))
-#             print("Most common shape = {}".format(most_common_shape))
-#             print("Shape counts {}".format(counts))
-#             drop_these.append(image.Index)
-
-#     cleaned_dataframe = dataframe.drop(index=drop_these).reset_index(drop=True)
-
-#     return cleaned_dataframe
 
 
 # To be deprecated functions
