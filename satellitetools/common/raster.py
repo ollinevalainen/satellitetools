@@ -149,3 +149,48 @@ def resample_raster(
             width=data.shape[-1],
         )
     return data, new_kwds
+
+
+def reproject_data_to_profile(
+    src_data: np.ndarray,
+    src_profile: dict,
+    target_profile: dict,
+    resampling: Resampling,
+) -> np.ndarray:
+    """Reproject raster data to target profile.
+
+    Parameters:
+    ----------------
+    src_data: np.ndarray
+        Source data.
+    src_profile: dict
+        Source profile.
+    target_profile: dict
+        Target profile.
+    resampling: Resampling
+        Resampling method.
+
+    Returns:
+    ----------------
+    np.ndarray
+        Reprojected data.
+    """
+
+    with MemoryFile() as src_memfile:
+        with src_memfile.open(**src_profile) as src:
+            src.write(src_data, 1)
+
+            with MemoryFile() as dst_memfile:
+                with dst_memfile.open(**target_profile) as dst:
+                    rasterio.warp.reproject(
+                        source=rasterio.band(src, 1),
+                        destination=rasterio.band(dst, 1),
+                        src_transform=src.transform,
+                        src_crs=src.crs,
+                        dst_transform=target_profile["transform"],
+                        dst_crs=src.crs,
+                        resampling=resampling,
+                    )
+                    reproj_data = dst.read(1)
+
+    return reproj_data
