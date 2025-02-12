@@ -262,7 +262,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         image_list = [ee.Image(asset_id) for asset_id in gee_assetids]
         crs = self.s2_items[0].metadata.projection
         feature = ee.Feature(
-            self.get_ee_geometry(list(self.aoi.geometry.exterior.coords)),
+            self.get_ee_geometry(self.aoi.geometry),
             {"name": self.aoi.name, "image_list": image_list, "crs": crs},
         )
 
@@ -279,7 +279,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         """
 
         feature = ee.Feature(
-            self.get_ee_geometry(list(self.aoi.geometry.exterior.coords)),
+            self.get_ee_geometry(self.aoi.geometry),
             {"name": self.aoi.name},
         )
         return feature
