@@ -15,12 +15,12 @@ from rasterio import mask
 from rasterio.enums import Resampling
 from rasterio.io import MemoryFile
 from rasterio.windows import get_data_window
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 
 def mask_raster(
     raster: Union[MemoryFile, os.PathLike],
-    aoi_geometry: Polygon,
+    aoi_geometry: Union[Polygon, MultiPolygon],
     no_data: Union[float, int],
 ) -> Tuple[np.ndarray, dict]:
     """Mask raster data with area of interest geometry.

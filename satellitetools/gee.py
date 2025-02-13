@@ -231,11 +231,22 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         ]
 
     def get_ee_geometry(self, shapely_geometry: shapely.Geometry) -> ee.Geometry:
+        """Get Earth Engine geometry from Shapely geometry.
+
+        Parameters
+        ----------
+        shapely_geometry : shapely.Geometry
+            Shapely geometry.
+
+        Returns
+        -------
+        ee_geometry : ee.Geometry
+            Earth Engine geometry.
+
+        """
         try:
-            return ee.Geometry.Polygon(
-                list(shapely_geometry.exterior.coords)
-            )
-        except AttributeError:
+            return ee.Geometry.Polygon(list(shapely_geometry.exterior.coords))
+        except AttributeError:  # MultiPolygon
             return ee.Geometry.MultiPolygon(
                 [self.get_ee_geometry(g) for g in shapely_geometry.geoms]
             )

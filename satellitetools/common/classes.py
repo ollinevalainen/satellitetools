@@ -19,7 +19,7 @@ except ImportError:
         pass
 
 
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 logger = logging.getLogger(__name__)
 
@@ -49,7 +49,7 @@ class AOI:
     def __init__(
         self,
         name: str,
-        geometry: Union[str, Polygon],
+        geometry: Union[str, Polygon, MultiPolygon],
         geometry_crs: str,
         tile: str = None,
     ):

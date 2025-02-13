@@ -2,7 +2,7 @@ import logging
 import os
 from pathlib import Path
 
-from shapely.geometry import Polygon
+from shapely.geometry import MultiPolygon, Polygon
 
 import satellitetools as sattools
 
@@ -229,6 +229,40 @@ class TestAWS:
         # that occur with this specific AOI and time period. Processes seem to be
         # reading a same image occasionally causing  error
         # rasterio._err.CPLE_AppDefinedError: SCL.tif, band 1: IReadBlock failed at...
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(aoi, request)
+        s2_data_collection.search_s2_items()
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        s2_data_collection.data_to_xarray()
+
+    def test_multipolygon(self):
+        qvidja_ca15 = [
+            [22.3873751, 60.2854051],
+            [22.389999, 60.2870115],
+            [22.3904474, 60.2868637],
+            [22.3879298, 60.28518369999998],
+            [22.3873751, 60.2854051],
+        ]
+        qvidja_ca6 = [
+            [22.3889573, 60.28739560000001],
+            [22.3896006, 60.2871823],
+            [22.3870542, 60.2855162],
+            [22.3865752, 60.2857636],
+            [22.3889573, 60.28739560000001],
+        ]
+
+        aoi_polygon = MultiPolygon([Polygon(qvidja_ca15), Polygon(qvidja_ca6)])
+        aoi = sattools.AOI("multipolygon", aoi_polygon, "EPSG:4326")
+        data_source = sattools.DataSource.AWS
+        bands = sattools.S2Band.get_10m_to_20m_bands()
+        request = sattools.Sentinel2RequestParams(
+            test_datestart,
+            test_dateend,
+            data_source,
+            bands=bands,
+            target_gsd=10,
+        )
         s2_data_collection = sattools.aws.AWSSentinel2DataCollection(aoi, request)
         s2_data_collection.search_s2_items()
         s2_data_collection.get_quality_info()
