@@ -15,6 +15,7 @@ from warnings import warn
 import ee
 import numpy as np
 import pandas as pd
+import shapely
 
 from satellitetools.common.classes import AOI, DataSource
 from satellitetools.common.sentinel2 import (
@@ -229,6 +230,16 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
             if s2_item.metadata.productid != productid
         ]
 
+    def get_ee_geometry(self, shapely_geometry: shapely.Geometry) -> ee.Geometry:
+        try:
+            return ee.Geometry.Polygon(
+                list(shapely_geometry.exterior.coords)
+            )
+        except AttributeError:
+            return ee.Geometry.MultiPolygon(
+                [self.get_ee_geometry(g) for g in shapely_geometry.geoms]
+            )
+
     def ee_feature_from_s2_items(self) -> ee.Feature:
         """Create GEE feature from Sentinel-2 items.
 
@@ -252,7 +263,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         image_list = [ee.Image(asset_id) for asset_id in gee_assetids]
         crs = self.s2_items[0].metadata.projection
         feature = ee.Feature(
-            ee.Geometry.Polygon(list(self.aoi.geometry.exterior.coords)),
+            self.get_ee_geometry(self.aoi.geometry),
             {"name": self.aoi.name, "image_list": image_list, "crs": crs},
         )
 
@@ -269,7 +280,7 @@ class GEESentinel2DataCollection(Sentinel2DataCollection):
         """
 
         feature = ee.Feature(
-            ee.Geometry.Polygon(list(self.aoi.geometry.exterior.coords)),
+            self.get_ee_geometry(self.aoi.geometry),
             {"name": self.aoi.name},
         )
         return feature
