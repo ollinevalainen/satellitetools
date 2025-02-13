@@ -1,6 +1,42 @@
 # CHANGELOG
 
 
+## v2.1.2 (2025-02-13)
+
+### Bug Fixes
+
+* fix: multipolygon for aws and multipolygon tests ([`6fa9365`](https://github.com/ollinevalainen/satellitetools/commit/6fa9365159a376c11c65e695e739cfc8491552ff))
+
+* fix: changed aws resampling approach ([`2e63964`](https://github.com/ollinevalainen/satellitetools/commit/2e6396472104d1550e82ab332e54a6eeae5f6836))
+
+* fix: added missing 10 m band (B8) ([`1650558`](https://github.com/ollinevalainen/satellitetools/commit/1650558eb44a64eedbfa0dcffe362193cd3a441d))
+
+* fix: crs property key in different pystac verisons ([`016d17f`](https://github.com/ollinevalainen/satellitetools/commit/016d17fc280fcd71841516244cb226a5085af134))
+
+* fix: handling of missing band data in GEE images ([`fae9469`](https://github.com/ollinevalainen/satellitetools/commit/fae9469ce5e3ea2fc43d8bcee3d813c008fa96d5))
+
+* fix: failing aws test to not use multiprocessing due to some random
+occuring rasterio error ([`9d83eb7`](https://github.com/ollinevalainen/satellitetools/commit/9d83eb74cc6973afabb2e46e941cfdaf45a3e269))
+
+### Documentation
+
+* docs: added citing information ([`e563771`](https://github.com/ollinevalainen/satellitetools/commit/e56377145356ab5180ee4479f67254180f0c705e))
+
+* docs: Updated todo and versions history to README ([`abf3415`](https://github.com/ollinevalainen/satellitetools/commit/abf34150cdea483f96d67d9b80051d6afbd7f681))
+
+### Unknown
+
+* Merge pull request #5 from juliusvira/allow-multipolygon-master
+
+fix: Allow multipolygon master ([`15f17f0`](https://github.com/ollinevalainen/satellitetools/commit/15f17f0c357767bd029d7fd32420a70af63b8509))
+
+* Merge branch 'ollinevalainen:master' into allow-multipolygon-master ([`92cecd3`](https://github.com/ollinevalainen/satellitetools/commit/92cecd38355bf563fa9dae25ecd4bb334e9a85e2))
+
+* change list of geometries to just geometry ([`cae638f`](https://github.com/ollinevalainen/satellitetools/commit/cae638f9d5f29b2265ef953a2d3a135956115e45))
+
+* multipolygon in the new gee ([`4a6f76b`](https://github.com/ollinevalainen/satellitetools/commit/4a6f76be61c20376afbaa159f17b6d27605497e4))
+
+
 ## v2.1.1 (2025-02-11)
 
 ### Bug Fixes
