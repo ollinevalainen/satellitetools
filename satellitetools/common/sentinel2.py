@@ -6,6 +6,7 @@ Classes for handling Sentinel-2 data.
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 
 """
+
 import logging
 from dataclasses import dataclass
 from typing import Dict, List, Optional
@@ -289,8 +290,10 @@ class Sentinel2RequestParams:
             self.bands = [S2Band(band) for band in bands]
         else:
             self.bands = [band for band in S2Band]
-        self.target_gsd = target_gsd
-        self.qi_evaluation_scale = qi_evaluation_scale
+        self.target_gsd = 20 if target_gsd is None else target_gsd
+        self.qi_evaluation_scale = (
+            20 if qi_evaluation_scale is None else qi_evaluation_scale
+        )
 
     def __repr__(self) -> str:
         return (
@@ -680,7 +683,6 @@ class Sentinel2DataCollection:
         }
 
         for s2_item in self.s2_items:
-
             # Handle spectral data
             if len(spectral_bands) > 0:
                 multiband_array = np.stack([s2_item.data[band] for band in bands])
