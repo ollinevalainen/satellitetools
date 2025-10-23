@@ -1,6 +1,20 @@
 # CHANGELOG
 
 
+## v2.1.4 (2025-10-23)
+
+### Bug Fixes
+
+* fix: ensure request params have default values if None given ([`1bd15cd`](https://github.com/ollinevalainen/satellitetools/commit/1bd15cd24c39e972359757d388766339b4582d83))
+
+
+## v2.1.3 (2025-09-26)
+
+### Bug Fixes
+
+* fix: updated packages due to dependabot security notifications ([`04a7699`](https://github.com/ollinevalainen/satellitetools/commit/04a769933bbd2fe2703344a48af2b1072ac909a4))
+
+
 ## v2.1.2 (2025-02-13)
 
 ### Bug Fixes
