@@ -1,6 +1,18 @@
 # CHANGELOG
 
 
+## v2.1.5 (2025-10-27)
+
+### Bug Fixes
+
+* fix: wrong nodata set with downloaded band data, caused issues in
+clipping to AOI ([`77981b9`](https://github.com/ollinevalainen/satellitetools/commit/77981b93c2bb52292ea58bbf485c8ed7041a1cf4))
+
+### Unknown
+
+* Merge branch 'master' into develop ([`f724a10`](https://github.com/ollinevalainen/satellitetools/commit/f724a109d384c2237125e7e72bc4ccd6561ba18b))
+
+
 ## v2.1.4 (2025-10-23)
 
 ### Bug Fixes
@@ -13,6 +25,8 @@
 ### Bug Fixes
 
 * fix: updated packages due to dependabot security notifications ([`04a7699`](https://github.com/ollinevalainen/satellitetools/commit/04a769933bbd2fe2703344a48af2b1072ac909a4))
+
+* fix: ensure that defaults set if None given to request parameters ([`f54367d`](https://github.com/ollinevalainen/satellitetools/commit/f54367d3fffa2a9fea9fa55edc59514e70df30be))
 
 
 ## v2.1.2 (2025-02-13)
