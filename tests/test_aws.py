@@ -236,6 +236,37 @@ class TestAWS:
         s2_data_collection.get_s2_data()
         s2_data_collection.data_to_xarray()
 
+    def test_product_with_nodata_in_aoi_corner(self):
+        aoi_coords = [
+            [25.26357682230987, 61.18521554124717],
+            [25.26114028733094, 61.18482782876639],
+            [25.26094993882246, 61.18364458454032],
+            [25.26012342958079, 61.1825059602979],
+            [25.25948536384726, 61.18109226582717],
+            [25.25903065308278, 61.18028608029265],
+            [25.262846667868, 61.18121793696833],
+            [25.26357682230987, 61.18521554124717],
+        ]
+        aoi_polygon = Polygon(aoi_coords)
+        aoi = sattools.AOI("problematic", aoi_polygon, "EPSG:4326")
+        date_start = "2018-09-25"
+        date_end = "2018-09-26"
+        data_source = sattools.DataSource.AWS
+        bands = sattools.S2Band.get_10m_to_20m_bands()
+        request = sattools.Sentinel2RequestParams(
+            date_start,
+            date_end,
+            data_source,
+            bands=bands,
+            target_gsd=10,
+        )
+        s2_data_collection = sattools.aws.AWSSentinel2DataCollection(aoi, request)
+        s2_data_collection.search_s2_items()
+        s2_data_collection.get_quality_info()
+        s2_data_collection.filter_s2_items()
+        s2_data_collection.get_s2_data()
+        s2_data_collection.data_to_xarray()
+
     def test_multipolygon(self):
         qvidja_ca15 = [
             [22.3873751, 60.2854051],

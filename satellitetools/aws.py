@@ -8,6 +8,7 @@ geotiffs (https://registry.opendata.aws/sentinel-2-l2a-cogs/).
 
 @author: Olli Nevalainen (Finnish Meteorological Institute)
 """
+
 import datetime
 import logging
 import urllib
@@ -415,7 +416,6 @@ class AWSSentinel2Metadata(Sentinel2Metadata):
         self.observation_geometry = get_observation_geometry(item)
 
     def get_reference_band(self, target_resolution: float) -> S2Band:
-
         spatial_resolutions = {
             band: abs(profile["transform"][0])
             for band, profile in self.profiles.items()
@@ -539,6 +539,7 @@ class AWSSentinel2Item(Sentinel2Item):
                 height=height,
                 width=width,
                 dtype=str(band_data.dtype),
+                nodata=SCL_NODATA if band == S2Band.SCL else SPECTRAL_BAND_NO_DATA,
             )
 
         self.metadata.profiles[band] = new_profile
