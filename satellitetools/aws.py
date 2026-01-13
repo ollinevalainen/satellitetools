@@ -804,7 +804,7 @@ def split_time_range(
     current_start = datestart
 
     while current_start < dateend:
-        next_end = current_start + pd.Timedelta(days=182)  # Approx. 6 months
+        next_end = current_start + pd.Timedelta(days=91)  # Approx. 3 months
         if next_end > dateend:
             next_end = dateend
         time_ranges.append((current_start, next_end))
