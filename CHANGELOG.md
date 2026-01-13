@@ -1,6 +1,13 @@
 # CHANGELOG
 
 
+## v2.1.6 (2026-01-13)
+
+### Bug Fixes
+
+* fix: increased STAC search timesplit with aws ([`14ddc8e`](https://github.com/ollinevalainen/satellitetools/commit/14ddc8e1d22423cba77b1c580f75ab7bc098a0a5))
+
+
 ## v2.1.5 (2025-10-27)
 
 ### Bug Fixes
